@@ -1,15 +1,12 @@
 #include "macros.h"
 #include "robot-config.h"
 
-bool clampEnable = true;
-bool pisEnable = true;
-
 double load = 0.2;
 double descore = 0.8;
 double target = load;
 double previous_error = lb.get_position();
 
-lbState currState = DOWN; 
+LBState currState = DOWN; 
 
 void lbControl() {
 
@@ -33,7 +30,9 @@ void lbControl() {
             }
             // otherwise, keep the lb down
             else {
-                lb.move_voltage(-1000);
+                double error = target - lb.get_position();
+                lb.move_voltage(error * 20000);
+                previous_error = error;
             }
         }
 
@@ -53,6 +52,7 @@ void lbControl() {
             }
             // put the lb back down if R2 is pressed 
             else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+                target = 0;
                 currState = DOWN;
             }
             else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
@@ -82,7 +82,7 @@ void lbControl() {
                 lb.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
             }
             // otherwise, hold the lb
-            else if(!autoEnable) {
+            else {
                 lb.move_voltage(0);
             }
         }
@@ -107,7 +107,6 @@ void lbControl() {
 
 }
 
-bool autoEnable = true; // only use in auto
 int intakeVoltage = 0;
 
 // allows toggling colorsort/antijam
@@ -126,12 +125,15 @@ bool enableAntiJam = true;
 // antijam management
 int jamTimer = 0;
 
-void intakeControl() { // called in initialize() of main.cpp
+// pistonized functions
+bool clampEnable = true;
+bool pisEnable = true;
+
+void intakeControl() {
 
     while(true) {
 
-        // separate driver/auto periods
-        if(!autoEnable) { // only take controller input in driver control
+        if(fieldState == OPCONTROL) { // only take controller input in driver control
             // L1 up intake
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) intakeVoltage = 12000;
             // L2 intake reverse

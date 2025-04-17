@@ -41,6 +41,8 @@
  */
 //#include "okapi/api.hpp"
 
+extern std::string error_msg;
+
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
  * Motor, you can use the namespace with the following commented out line.
@@ -74,7 +76,7 @@ void opcontrol(void);
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
+#include <iostream>
 #endif
 
 #endif  // _PROS_MAIN_H_
