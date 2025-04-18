@@ -1,10 +1,11 @@
 #include <cmath>
 
 #include "pros/misc.hpp"
-#include "chassis.h"
+#include "chassis/chassis.h"
 #include "utils/utils.h"
 #include "utils/timer.h"
 #include "robot-config.h"
+#include "utils/math.h"
 
 void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseParams params, bool async) {
     // take the mutex
@@ -32,7 +33,7 @@ void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseP
     if (!params.forwards) target.theta = fmod(target.theta + M_PI, 2 * M_PI); // backwards movement
 
     // use global horizontalDrift is horizontalDrift is 0
-    if (params.horizontalDrift == 0) params.horizontalDrift = drivetrain.horizontalDrift;
+    if (params.horizontalDrift == 0) params.horizontalDrift = horizontalDrift;
 
     // initialize vars used between iterations
     Pose lastPose = getPose();

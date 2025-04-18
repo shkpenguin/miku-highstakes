@@ -1,11 +1,12 @@
 #pragma once
 
-#include "chassis.h"
+#include "chassis/chassis.h"
 #include "api.h"
 
 #define DT_WHEEL_DIAMETER 3.25
 #define TRACKING_WHEEL_DIAMETER 2.75
 #define TRACKING_WHEEL_OFFSET 0.5
+#define HORIZONTAL_DRIFT 2.0
 
 extern pros::MotorGroup left_dt;
 extern pros::MotorGroup right_dt;

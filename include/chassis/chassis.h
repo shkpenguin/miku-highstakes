@@ -4,6 +4,9 @@
 #include "pros/imu.hpp"
 #include "utils/pose.h"
 #include "utils/pid.h"
+#include "utils/exitcondition.h"
+#include "api.h"
+#include "utils/math.h"
 
 class ControllerSettings {
     public:
@@ -128,6 +131,17 @@ struct MoveToPointParams {
         float earlyExitRange = 0;
 };
 
+struct MoveDistanceParams {
+        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
+        float maxSpeed = 127;
+        /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
+         * less accurate but smoother ones. Value between 0-127. 0 by default */
+        float minSpeed = 0;
+        /** distance between the robot and target point where the movement will exit. Only has an effect if minSpeed is
+         * non-zero.*/
+        float earlyExitRange = 0;
+};
+
 /**
  * @brief Chassis class
  */
@@ -135,8 +149,8 @@ class Chassis {
     public:
 
         Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
-                pros::Rotation* trackingWheel, DriveCurve* throttleCurve, DriveCurve* steerCurve,
-                ControllerSettings lateralSettings, ControllerSettings angularSettings);
+                pros::Rotation* trackingWheel, ControllerSettings lateralSettings, 
+                ControllerSettings angularSettings);
 
         void setPose(float x, float y, float theta, bool radians = false);
 
@@ -164,7 +178,11 @@ class Chassis {
 
         void moveToPoint(float x, float y, int timeout, MoveToPointParams params = {}, bool async = true);
 
-        void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
+        void moveDistance(float distance, int timeout, MoveDistanceParams params = {}, bool async = true);
+
+        void moveTime(float time, float speed);
+
+        // void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
 
         void tank(int left, int right, bool disableDriveCurve = false);
 
@@ -197,9 +215,8 @@ class Chassis {
         float distTraveled = 0;
 
         ControllerSettings lateralSettings;
+        ControllerSettings goalSettings;
         ControllerSettings angularSettings;
-        DriveCurve* throttleCurve;
-        DriveCurve* steerCurve;
 
         pros::MotorGroup* leftMotors;
         pros::MotorGroup* rightMotors;

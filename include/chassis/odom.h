@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pose.h"
+#include "utils/pose.h"
 
 Pose getPose(bool radians = false);
 /**

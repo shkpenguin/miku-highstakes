@@ -1,7 +1,7 @@
 #pragma once   
 
-#include "math.h"
-#include "utils.h"
+#include "utils/math.h"
+#include "utils/utils.h"
 
 extern LBState currState;
 extern FieldState fieldState;

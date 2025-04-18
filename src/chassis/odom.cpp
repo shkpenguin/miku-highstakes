@@ -1,7 +1,7 @@
-#include "utils.h"
+#include "utils/utils.h"
 #include "robot-config.h"
 #include "pros/rtos.hpp"
-#include "chassis/miku/odom.h"
+#include "chassis/odom.h"
 #include <vector>
 
 // tracking thread
@@ -51,7 +51,7 @@ Pose getSpeed(bool radians) {
 // }
 
 void update() {
-    float s_raw = deg2inch(hori.get_angle() / 100);
+    float s_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, hori.get_angle() / 100);
     float imuRaw = deg2rad(imu.get_rotation());
     float left_raw = avg(left_dt.get_position_all());
     float right_raw = avg(right_dt.get_position_all());

@@ -5,7 +5,7 @@ class Pose {
         float x;
         float y;
         float theta;
-        Pose(float x, float y, float theta = 0);
+        Pose(float x, float y, float theta);
         Pose operator+(const Pose& other) const;
         Pose operator-(const Pose& other) const;
         float operator*(const Pose& other) const;
@@ -27,4 +27,5 @@ class Point {
         float operator*(const Point& other) const;
         Point operator*(const float& other) const;
         Point operator/(const float& other) const;
+        float distance(Point other) const;
 };

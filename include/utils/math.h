@@ -1,4 +1,5 @@
 #include <vector>
+#include <cmath>
 
 /*** @brief only numbers!!!!!!!!!! ***/
 template <typename T>
