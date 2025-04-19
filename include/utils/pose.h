@@ -6,6 +6,7 @@ class Pose {
         float y;
         float theta;
         Pose(float x, float y, float theta);
+        Pose(float x, float y);
         Pose operator+(const Pose& other) const;
         Pose operator-(const Pose& other) const;
         float operator*(const Pose& other) const;

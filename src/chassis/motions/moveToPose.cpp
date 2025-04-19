@@ -33,7 +33,7 @@ void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseP
     if (!params.forwards) target.theta = fmod(target.theta + M_PI, 2 * M_PI); // backwards movement
 
     // use global horizontalDrift is horizontalDrift is 0
-    if (params.horizontalDrift == 0) params.horizontalDrift = horizontalDrift;
+    if (params.horizontalDrift == 0) params.horizontalDrift = HORIZONTAL_DRIFT;
 
     // initialize vars used between iterations
     Pose lastPose = getPose();
@@ -97,12 +97,12 @@ void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseP
         // update exit conditions
         lateralSmallExit.update(lateralError);
         lateralLargeExit.update(lateralError);
-        angularSmallExit.update(radToDeg(angularError));
-        angularLargeExit.update(radToDeg(angularError));
+        angularSmallExit.update(rad2deg(angularError));
+        angularLargeExit.update(rad2deg(angularError));
 
         // get output from PIDs
         float lateralOut = lateralPID.update(lateralError);
-        float angularOut = angularPID.update(radToDeg(angularError));
+        float angularOut = angularPID.update(rad2deg(angularError));
 
         // apply restrictions on angular speed
         angularOut = std::clamp(angularOut, -params.maxSpeed, params.maxSpeed);
@@ -135,8 +135,6 @@ void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseP
         prevAngularOut = angularOut;
         prevLateralOut = lateralOut;
 
-        infoSink()->debug("lateralOut: {} angularOut: {}", lateralOut, angularOut);
-
         // ratio the speeds to respect the max speed
         float leftPower = lateralOut + angularOut;
         float rightPower = lateralOut - angularOut;
@@ -147,8 +145,8 @@ void Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseP
         }
 
         // move the drivetrain
-        drivetrain.leftMotors->move(leftPower);
-        drivetrain.rightMotors->move(rightPower);
+        this->leftMotors->move(leftPower);
+        this->rightMotors->move(rightPower);
 
         // delay to save resources
         pros::delay(10);

@@ -3,6 +3,8 @@
 
 Pose::Pose(float x, float y, float theta = 0) : x(x), y(y), theta(theta) {}
 
+Pose::Pose(float x, float y) : x(x), y(y), theta(0) {}
+
 Pose Pose::operator+(const Pose& other) const {
     return Pose(x + other.x, y + other.y, theta + other.theta);
 }

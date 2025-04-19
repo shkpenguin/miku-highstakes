@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include <optional>
 
 /*** @brief only numbers!!!!!!!!!! ***/
 template <typename T>
@@ -21,3 +22,4 @@ float ema(float newValue, float oldValue, float alpha);
 float rot2inch(float circumference, float rot);
 
 float deg2inch(float circumference, float deg);
+
