@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api.h"
+#include "pose.h"
 
 enum LBState {
     DOWN = 0,
@@ -29,7 +30,7 @@ enum FieldState {
     OPCONTROL = 4
 };
 
-enum AngularDirection {
+enum class AngularDirection {
     CW_CLOCKWISE, /** turn clockwise */
     CCW_COUNTERCLOCKWISE, /** turn counter-clockwise */
     AUTO /** turn in the direction with the shortest distance to target */

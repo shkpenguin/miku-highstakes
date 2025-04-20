@@ -7,6 +7,7 @@
 #include "utils/exitcondition.h"
 #include "api.h"
 #include "utils/math.h"
+#include "utils/utils.h"
 
 class ControllerSettings {
     public:
@@ -31,12 +32,6 @@ class ControllerSettings {
         float largeError;
         float largeErrorTimeout;
         float slew;
-};
-
-enum class AngularDirection {
-    CW_CLOCKWISE, /** turn clockwise */
-    CCW_COUNTERCLOCKWISE, /** turn counter-clockwise */
-    AUTO /** turn in the direction with the shortest distance to target */
 };
 
 struct TurnToPointParams {

@@ -1,11 +1,13 @@
 #include "macros.h"
 #include "robot-config.h"
+#include "utils/utils.h"
 
 double load = 0.2;
 double descore = 0.8;
 double target = load;
 double previous_error = lb.get_position();
 
+FieldState fieldState = INITIALIZE;
 LBState currState = DOWN; 
 
 void lbControl() {
