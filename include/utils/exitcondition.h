@@ -3,7 +3,9 @@
 class ExitCondition {
     public:
 
-        ExitCondition(const float range, const int time);
+        ExitCondition(const float range, const int time) :
+            range(range),
+            time(time) {}
 
         bool getExit();
 

@@ -2,6 +2,8 @@
 
 #include "utils/pose.h"
 
+extern Pose odomPose;
+
 Pose getPose(bool radians = false);
 /**
  * @brief Set the Pose of the robot

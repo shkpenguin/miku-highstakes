@@ -1,10 +1,31 @@
+#pragma once
+
 #include <vector>
 #include <cmath>
-#include <optional>
+#include <initializer_list>
 
-/*** @brief only numbers!!!!!!!!!! ***/
 template <typename T>
-int sgn(T x);
+int sgn(T x) {
+    return (T(0) < x) - (x < T(0));
+}
+
+template <typename T>
+float avg(const std::vector<T>& values) {
+    float sum = 0;
+    for (const auto& value : values) {
+        sum += value;
+    }
+    return sum / values.size();
+}
+
+template <typename T>
+float avg(const std::initializer_list<T>& values) {
+    float sum = 0;
+    for (const auto& value : values) {
+        sum += value;
+    }
+    return sum / values.size();
+}
 
 /*** @brief only numbers!!!!!!!!!! ***/
 template <typename T>

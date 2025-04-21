@@ -4,10 +4,6 @@
 #include "pros/rtos.hpp"
 #include "utils/exitcondition.h"
 
-ExitCondition::ExitCondition(const float range, const int time)
-    : range(range),
-      time(time) {}
-
 bool ExitCondition::getExit() { return done; }
 
 bool ExitCondition::update(const float input) {

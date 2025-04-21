@@ -4,17 +4,12 @@
 #include "chassis/odom.h"
 #include <vector>
 
-// tracking thread
-pros::Task* trackingTask = nullptr;
-
-Pose odomPose(0, 0, 0);
+Pose odomPose(0, 0, 0.0);
 Pose dPose(0, 0, 0);
 
-float prev_s = 0;
-float prev_v = 0;
+float prev_hori = 0;
+float prev_vertical = 0;
 float prev_imu = 0;
-float prev_left = 0;
-float prev_right = 0;
 
 Pose getPose(bool radians) {
     if (radians) return odomPose;
@@ -51,67 +46,52 @@ Pose getSpeed(bool radians) {
 // }
 
 void update() {
-    float s_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, hori.get_angle() / 100);
+    float hori_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, hori.get_position() / 100);
+    float vert_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, vertical.get_position() / 100);
     float imuRaw = deg2rad(imu.get_rotation());
-    float left_raw = avg(left_dt.get_position_all());
-    float right_raw = avg(right_dt.get_position_all());
-    float v_raw = avg({left_raw, right_raw}) - avg({prev_left, prev_right});
-    float d_imu = imuRaw - prev_imu;
+    float d_heading = imuRaw - prev_imu;
 
     prev_imu = imuRaw;
-    prev_left = left_raw;
-    prev_right = right_raw;
 
     float heading = odomPose.theta;
-    
-    heading += d_imu;
-    float deltaHeading = heading - odomPose.theta;
-    float avgHeading = odomPose.theta + deltaHeading / 2;
+
+    heading += d_heading;
+    float avgHeading = odomPose.theta + d_heading / 2;
 
     float deltaX = 0;
     float deltaY = 0;
-    deltaY = rot2inch(M_PI * DT_WHEEL_DIAMETER, v_raw - prev_v);
-    deltaX = rot2inch(M_PI * TRACKING_WHEEL_DIAMETER, s_raw - prev_s);
-    
+    deltaY = vert_raw - prev_vertical;
+    deltaX = hori_raw - prev_hori;
 
-    // calculate local x and y
+    // Safeguard against division by zero
     float localX = 0;
     float localY = 0;
-    if (deltaHeading == 0) { // prevent divide by 0
+    if (std::abs(d_heading) < 1e-6) { // Small threshold to avoid divide by zero
         localX = deltaX;
         localY = deltaY;
     } else {
-        localX = 2 * sin(deltaHeading / 2) * (deltaX / deltaHeading + TRACKING_WHEEL_OFFSET);
-        localY = 2 * sin(deltaHeading / 2) * (deltaY / deltaHeading);
+        localX = 2 * sin(d_heading / 2) * (deltaX / d_heading + HORIZONTAL_OFFSET);
+        localY = 2 * sin(d_heading / 2) * (deltaY / d_heading + VERTICAL_OFFSET);
     }
 
-    prev_s = s_raw;
-    prev_v = v_raw;
+    prev_hori = hori_raw;
+    prev_vertical = vert_raw;
 
-    // save previous pose
+    // Save previous pose
     Pose prevPose = odomPose;
 
-    // calculate global x and y
-    odomPose.x += localY * sin(avgHeading);
-    odomPose.y += localY * cos(avgHeading);
-    odomPose.x += localX * -cos(avgHeading);
-    odomPose.y += localX * sin(avgHeading);
+    // Calculate global x and y
+    odomPose.x += localY * std::sin(avgHeading);
+    odomPose.y += localY * std::cos(avgHeading);
+    odomPose.x += localX * -std::cos(avgHeading);
+    odomPose.y += localX * std::sin(avgHeading);
     odomPose.theta = heading;
 
-    // calculate speed
+    // Debug logging for troubleshooting
+
+    // Calculate speed
     dPose.x = ema((odomPose.x - prevPose.x) / 0.01, dPose.x, 0.95);
     dPose.y = ema((odomPose.y - prevPose.y) / 0.01, dPose.y, 0.95);
     dPose.theta = ema((odomPose.theta - prevPose.theta) / 0.01, dPose.theta, 0.95);
-    
-}
 
-void init() {
-    if (trackingTask == nullptr) {
-        trackingTask = new pros::Task {[=] {
-            while (true) {
-                update();
-                pros::delay(10);
-            }
-        }};
-    }
 }

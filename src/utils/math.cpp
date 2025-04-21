@@ -1,29 +1,6 @@
 #include "utils/math.h"
 #include "utils/utils.h"
 
-template <typename T>
-int sgn(T x) {
-    return (T(0) < x) - (x < T(0));
-}
-
-template <typename T>
-float avg(const std::vector<T>& values) {
-    float sum = 0;
-    for (const auto& value : values) {
-        sum += value;
-    }
-    return sum / values.size();
-}
-
-template <typename T>
-float avg(const std::initializer_list<T>& values) {
-    float sum = 0;
-    for (const auto& value : values) {
-        sum += value;
-    }
-    return sum / values.size();
-}
-
 float rad2deg(float rad) {
     return rad * 180 / M_PI;
 }

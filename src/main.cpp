@@ -5,6 +5,7 @@
 #include "utils/utils.h"
 #include "chassis/odom.h"
 #include "pros/adi.hpp"
+#include "utils/pose.h"
 
 std::string error_msg = "";
 
@@ -14,26 +15,34 @@ void on_center_button() {
 
 void initialize() {
 
-	fieldState = INITIALIZE;
-
 	imu.reset();
 	while(imu.is_calibrating()) {
 		pros::delay(10);
 	}
 
-	left_dt.tare_position_all();
-	right_dt.tare_position_all();
+	pros::Task trackingTask = pros::Task{[=] {
+		while (true) {
+			update();
+			pros::delay(10);
+		}
+	}};
+
+	vertical.reset_position();
+	hori.reset_position();
 	intake.tare_position();
-	lb.tare_position();
+	lbRot.reset_position();
 
 	pros::Task intakeTask(intakeControl);
 	pros::Task lbTask(lbControl);
 	pros::Task controllerDisplay = pros::Task([] {
 		while (true) {
-			master.set_text(0, 0, std::to_string(static_cast<int>(getPose().x * 10) / 10.0) + 
-				" " + std::to_string(static_cast<int>(getPose().y * 10) / 10.0) + 
-				" " + std::to_string(static_cast<int>(getPose().theta * 10) / 10.0));
-			master.set_text(1, 0, error_msg);
+			if(error_msg == "") {
+				master.set_text(0, 0, _2f(odomPose.x) 
+				+ " " + _2f(odomPose.y)
+				+ " " + _2f(odomPose.theta));
+			} else {
+				master.set_text(0, 0, error_msg);
+			}
 			pros::delay(50);
 		}
 	});
@@ -42,31 +51,43 @@ void initialize() {
 
 void disabled() {
 
-	fieldState = DISABLED;
-
 }
 
 void competition_initialize() {
-
-	fieldState = COMPETITION;
 
 }
 
 void autonomous() {
 
-	fieldState = AUTONOMOUS;
-
 }
 
-void opcontrol() {
+bool clampEnable = true;
+bool pisEnable = true;
 
-	fieldState = OPCONTROL;
+void opcontrol() {
 
 	while (true) {
 
 		int dir = master.get_analog(ANALOG_LEFT_Y);   
 		int turn = master.get_analog(ANALOG_RIGHT_X);  
-		arcade(dir, turn);
-		pros::delay(10); 
+		miku.arcade(dir, turn);
+
+		// clamp control here because why not
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
+            clamp.set_value(clampEnable);
+            clampEnable = !clampEnable;
+        }
+
+        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
+        //     asmacro();
+        // }
+
+        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+        //     pistake.set_value(pisEnable);
+        //     pisEnable = !pisEnable;
+        // }
+		
+		pros::delay(10);
+
 	}
 }

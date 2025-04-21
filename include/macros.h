@@ -4,7 +4,8 @@
 #include "utils/utils.h"
 
 extern LBState currState;
-extern FieldState fieldState;
+
+extern pros::Task lbTask;
 
 void lbControl();
 
@@ -28,4 +29,4 @@ extern int jamTimer;
 
 void intakeControl();
 
-void arcade(int throttle, int turn);
+void t3();

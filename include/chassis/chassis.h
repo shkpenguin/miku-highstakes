@@ -11,6 +11,10 @@
 
 class ControllerSettings {
     public:
+        ControllerSettings() 
+            : kP(0), kI(0), kD(0), windupRange(0), smallError(0), smallErrorTimeout(0),
+              largeError(0), largeErrorTimeout(0), slew(0) {}
+
         ControllerSettings(float kP, float kI, float kD, float windupRange, float smallError, float smallErrorTimeout,
                            float largeError, float largeErrorTimeout, float slew)
             : kP(kP),
@@ -143,10 +147,12 @@ struct MoveDistanceParams {
 class Chassis {
     public:
 
-        Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
-                pros::Rotation* trackingWheel, ControllerSettings lateralSettings, 
-                ControllerSettings angularSettings);
+        //chassis constructor:
 
+        Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
+                pros::Rotation* verticalTracker, pros::Rotation* horiTracker, ControllerSettings lateralSettings, 
+                ControllerSettings angularSettings);
+        
         void setPose(float x, float y, float theta, bool radians = false);
 
         void setPose(Pose pose, bool radians = false);
@@ -216,7 +222,8 @@ class Chassis {
         pros::MotorGroup* leftMotors;
         pros::MotorGroup* rightMotors;
 
-        pros::Rotation* trackingWheel;
+        pros::Rotation* verticalTracker;
+        pros::Rotation* horiTracker;
 
         ExitCondition lateralLargeExit;
         ExitCondition lateralSmallExit;

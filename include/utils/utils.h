@@ -5,9 +5,10 @@
 
 enum LBState {
     DOWN = 0,
-    READY = 1,
-    RAISED = 2,
-    DESCORE = 3
+    READY = 4000,
+    RAISED = -1,
+    DESCORE = 13500,
+    HANG = 6000
 };
 
 enum RingState {
@@ -20,14 +21,6 @@ enum Color {
     RED = 1,
     BLUE = -1,
     NONE = 0
-};
-
-enum FieldState {
-    INITIALIZE = 0,
-    COMPETITION = 1,
-    AUTONOMOUS = 2,
-    DISABLED = 3,
-    OPCONTROL = 4
 };
 
 enum class AngularDirection {
@@ -43,3 +36,10 @@ float angleError(float target, float position, bool radians = false, AngularDire
 float slew(float target, float current, float maxChange);
 
 float getCurvature(Pose pose, Pose other);
+
+float curve(float input, float deadband, float curveGain, float minOutput = 0);
+
+/**
+* @brief i am not installing fmt just for this
+**/
+std::string _2f(float num);

@@ -4,10 +4,6 @@
 #include "routes.h"
 #include "utils/utils.h"
 
-void panic() {
-    panicMode = true;
-}
-
 void calibrateIMU() {
     int attempt = 1;
     while (attempt <= 3) {
@@ -28,22 +24,22 @@ void calibrateIMU() {
     }
     if (attempt > 3) {
         error_msg = "kill yourself";
-        panic();
     }
 }
 
-void Chassis::setPose(float x, float y, float theta, bool radians) {
-    setPose(Pose(x, y, theta), radians);
-}
-
-void Chassis::setPose(Pose pose, bool radians) { setPose(pose, radians); }
-
-Pose Chassis::getPose(bool radians, bool standardPos) {
-    Pose pose = getPose(true);
-    if (standardPos) pose.theta = M_PI_2 - pose.theta;
-    if (!radians) pose.theta = rad2deg(pose.theta);
-    return pose;
-}
+Chassis::Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
+                 pros::Rotation* verticalTracker, pros::Rotation* horiTracker,
+                 ControllerSettings lateralSettings, ControllerSettings angularSettings) :
+    leftMotors(leftMotors),
+    rightMotors(rightMotors),
+    verticalTracker(verticalTracker),
+    horiTracker(horiTracker),
+    lateralPID(lateralSettings.kP, lateralSettings.kI, lateralSettings.kD, lateralSettings.windupRange, true),
+    angularPID(angularSettings.kP, angularSettings.kI, angularSettings.kD, angularSettings.windupRange, true),
+    lateralLargeExit(lateralSettings.largeError, lateralSettings.largeErrorTimeout),
+    lateralSmallExit(lateralSettings.smallError, lateralSettings.smallErrorTimeout),
+    angularLargeExit(angularSettings.largeError, angularSettings.largeErrorTimeout),
+    angularSmallExit(angularSettings.smallError, angularSettings.smallErrorTimeout) {}
 
 void Chassis::waitUntil(float dist) {
     // do while to give the thread time to start
@@ -98,4 +94,33 @@ void Chassis::resetLocalPosition() {
 void Chassis::setBrakeMode(pros::motor_brake_mode_e mode) {
     left_dt.set_brake_mode_all(mode);
     right_dt.set_brake_mode_all(mode);
+}
+
+void Chassis::arcade(int throttle, int turn, bool disableDriveCurve, float desaturateBias) {
+
+    if (!disableDriveCurve) {
+        throttle = std::round(curve(throttle, DEADBAND, EXPO_CURVE_GAIN, MIN_SPEED));
+        turn = std::round(curve(turn, DEADBAND, EXPO_CURVE_GAIN, MIN_SPEED));
+    }
+    // desaturate motors based on joyBias
+    if (std::abs(throttle) + std::abs(turn) > 127) {
+        int oldThrottle = throttle;
+        int oldTurn = turn;
+        throttle *= (1 - desaturateBias * std::abs(oldTurn / 127.0));
+        turn *= (1 - (1 - desaturateBias) * std::abs(oldThrottle / 127.0));
+        // ensure the sum of the two values is equal to 127
+        // this check is necessary because of integer division
+        if (std::abs(turn) + std::abs(throttle) == 126) {
+            if (desaturateBias < 0.5) throttle += sgn(throttle);
+            else turn += sgn(turn);
+        }
+    }
+
+    int leftPower = throttle + turn;
+    int rightPower = throttle - turn;
+
+    // move drive
+    this->leftMotors->move(leftPower);
+    this->rightMotors->move(rightPower);
+
 }
