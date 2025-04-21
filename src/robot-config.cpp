@@ -26,4 +26,8 @@ ControllerSettings lateralSettings(0.5, 0.0, 0.0, 0.0, 1.5, 0.0, 2.5, 0.0, 10);
 
 ControllerSettings angularSettings(0.5, 0.0, 0.0, 0.0, 1.5, 0.0, 2.5, 0.0, 10);
 
+Constraints constraints(MAX_VEL, MAX_VEL * 3, 0.1, MAX_VEL * 3, MAX_VEL * 100, TRACK_WIDTH);
+
+ProfileGenerator profileGenerator(&constraints);
+
 Chassis miku(&left_dt, &right_dt, &vertical, &hori, lateralSettings, angularSettings);

@@ -185,6 +185,8 @@ class Chassis {
 
         // void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
 
+        void ramsete(Point p0, Point p1, Point p2, Point p3, int timeout);
+
         void tank(int left, int right, bool disableDriveCurve = false);
 
         void arcade(int throttle, int turn, bool disableDriveCurve = false, float desaturateBias = 0.5);

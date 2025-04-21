@@ -5,8 +5,8 @@ class Pose {
         float x;
         float y;
         float theta;
-        Pose(float x, float y, float theta);
-        Pose(float x, float y);
+        Pose();
+        Pose(float x, float y, float theta = 0);
         Pose operator+(const Pose& other) const;
         Pose operator-(const Pose& other) const;
         float operator*(const Pose& other) const;
@@ -20,13 +20,14 @@ class Pose {
 
 class Point {
     public:
-        float x;
-        float y;
-        Point(float x, float y);
+        double x;
+        double y;
+        Point();
+        Point(double x, double y);
         Point operator+(const Point& other) const;
         Point operator-(const Point& other) const;
-        float operator*(const Point& other) const;
-        Point operator*(const float& other) const;
-        Point operator/(const float& other) const;
-        float distance(Point other) const;
+        double operator*(const Point& other) const;
+        Point operator*(const double& other) const;
+        Point operator/(const double& other) const;
+        double distance(Point other) const;
 };

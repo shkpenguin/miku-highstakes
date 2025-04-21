@@ -1,9 +1,13 @@
 #include "utils/pose.h"
 #include "utils/utils.h"
 
-Pose::Pose(float x, float y, float theta = 0) : x(x), y(y), theta(theta) {}
+Pose::Pose() {
+    x = 0;
+    y = 0;
+    theta = 0;
+}
 
-Pose::Pose(float x, float y) : x(x), y(y), theta(0) {}
+Pose::Pose(float x, float y, float theta) : x(x), y(y), theta(theta) {}
 
 Pose Pose::operator+(const Pose& other) const {
     return Pose(x + other.x, y + other.y, theta + other.theta);
@@ -45,7 +49,12 @@ Pose Pose::rotate(float angle) const {
                 theta);
 }
 
-Point::Point(float x, float y) : x(x), y(y) {}
+Point::Point() {
+    x = 0;
+    y = 0;
+}
+
+Point::Point(double x, double y) : x(x), y(y) {}
 
 Point Point::operator+(const Point& other) const {
     return Point(x + other.x, y + other.y);
@@ -55,18 +64,18 @@ Point Point::operator-(const Point& other) const {
     return Point(x - other.x, y - other.y);
 }
 
-float Point::operator*(const Point& other) const {
+double Point::operator*(const Point& other) const {
     return x * other.x + y * other.y;
 }
 
-Point Point::operator*(const float& other) const {
+Point Point::operator*(const double& other) const {
     return Point(x * other, y * other);
 }
 
-Point Point::operator/(const float& other) const {
+Point Point::operator/(const double& other) const {
     return Point(x / other, y / other);
 }
 
-float Point::distance(Point other) const {
+double Point::distance(Point other) const {
     return sqrt(pow(other.x - x, 2) + pow(other.y - y, 2));
 }
