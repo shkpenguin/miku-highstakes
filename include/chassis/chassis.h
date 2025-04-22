@@ -8,6 +8,7 @@
 #include "api.h"
 #include "utils/math.h"
 #include "utils/utils.h"
+#include "tbh.h"
 
 class ControllerSettings {
     public:
@@ -204,6 +205,8 @@ class Chassis {
         PID lateralPID;
 
         PID angularPID;
+
+        TBH tbh;
     protected:
 
         void requestMotionStart();

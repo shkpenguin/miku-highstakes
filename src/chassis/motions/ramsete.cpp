@@ -21,10 +21,13 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
     Timer timer(timeout);
 
-    profileGenerator.generateProfile(new Path(p0, p1, p2, p3));
-    std::vector<Waypoint> waypoints = profileGenerator.getPath().getWaypoints();
+    Path p = Path(p0, p1, p2, p3);
+    p.generateWaypoints();
     int currentWaypoint = 0;
-    int waypointCount = waypoints.size();
+    int waypointCount = p.waypoints.size();
+
+    Chassis::tbh.setStatus(true);
+    // Chassis::tbh.setGain(25.0);
 
     while(!timer.isDone() && this->motionRunning && (!lateralLargeExit.getExit() && !lateralSmallExit.getExit())) {
         Pose pose = this->getPose();
@@ -34,10 +37,10 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
         // --- Find closest waypoint ---
         int closest = currentWaypoint;
-        double closest_dist = std::hypot(robot_x - waypoints[closest].x, robot_y - waypoints[closest].y);
+        double closest_dist = std::hypot(robot_x - p.waypoints[closest].x, robot_y - p.waypoints[closest].y);
 
         while (closest + 1 < waypointCount - 1) {
-            double next_dist = std::hypot(robot_x - waypoints[closest + 1].x, robot_y - waypoints[closest + 1].y);
+            double next_dist = std::hypot(robot_x - p.waypoints[closest + 1].x, robot_y - p.waypoints[closest + 1].y);
             if (next_dist < closest_dist) {
                 closest++;
                 closest_dist = next_dist;
@@ -49,7 +52,7 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         currentWaypoint = closest;
 
         // --- Pull target waypoint ---
-        Waypoint wp = waypoints[currentWaypoint];
+        Waypoint wp = p.waypoints[currentWaypoint];
 
         // Target pose
         double xt = wp.x;
@@ -85,11 +88,16 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double leftVel = v - w * (TRACK_WIDTH / 2.0);
         double rightVel = v + w * (TRACK_WIDTH / 2.0);
 
-        this->setWheelVelocities(leftVel, rightVel);
+        tbh.setLeftTarget(leftVel);
+        tbh.setRightTarget(rightVel);
+        tbh.update();
 
         pros::delay(dt);
     }
 
-    this->setWheelVelocities(0, 0);
+    tbh.setStatus(false);
+    left_dt.move_velocity(0);
+    right_dt.move_velocity(0);
+    
     this->motionRunning = false;
 }

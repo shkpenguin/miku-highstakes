@@ -41,8 +41,8 @@ void TBH::update() {
     if (!enabled_) return;
 
     // Read current velocities
-    double rightVel = tchassis::right::get_actual_velocity("percent");
-    double leftVel  = tchassis::left::get_actual_velocity("percent");
+    double rightVel = avg(left_dt.get_actual_velocity_all());
+    double leftVel  = avg(right_dt.get_actual_velocity_all());
 
     // Compute errors
     right_.error = right_.target - rightVel;
@@ -53,8 +53,8 @@ void TBH::update() {
     calculate(left_);
 
     // Apply voltages
-    tchassis::right::move_voltage(right_.volts);
-    tchassis::left::move_voltage(left_.volts);
+    left_dt.move_voltage(left_.volts);
+    right_dt.move_voltage(right_.volts);
 }
 
 void TBH::calculate(Channel &ch) {
