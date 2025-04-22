@@ -3,7 +3,7 @@
 #include "utils/utils.h"
 
 double target = DOWN;
-double previous_error = lb.get_position();
+double previous_error = lbRot.get_position();
 
 LBState currState = DOWN; 
 
@@ -11,11 +11,12 @@ void lbControl() {
 
     while(true) {
 
-        if(lbRot.get_position() < 0) lbRot.reset_position();
-
         if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
-            currState = RAISED;
-            lb.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+            if(currState == DESCORE) target += 1200;
+            else {
+                currState = RAISED;
+                lb.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+            }
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
@@ -38,16 +39,19 @@ void lbControl() {
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
-            currState = HANG;
-            target = HANG;
-            hang.set_value(true);
+            if(currState == HANG) t3();
+            else {
+                currState = HANG;
+                target = HANG;
+                pros::delay(500);
+                hang.set_value(true);
+            }
         }
-
-        if(currState == DESCORE && master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) target += 500;
 
         if(currState != RAISED) { 
             double error = target - lbRot.get_position();
-            lb.move_voltage(error * 1.5);
+            double derivative = error - previous_error;
+            lb.move_voltage(error * 1.5 + derivative * 10);
             previous_error = error;
         }
 
@@ -163,13 +167,12 @@ void intakeControl() {
 }
 
 void t3() {
-    lbTask.suspend();
 
     pto.set_value(false);
     pros::delay(200);
 
-    lb.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-
+    currState = RAISED;
+    
     /*
     * pass requirements:
     * 1. lb has reached 5 degrees
@@ -179,15 +182,23 @@ void t3() {
     // drive backwards while pushing down lb motor slowly(torquemaxxing)
     
     while(lbRot.get_position() > 100) {
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) break;
         left_dt.move_velocity(-12000);
         right_dt.move_velocity(-12000);
         lb.move_velocity(-2000);
         pros::delay(10);
     }
+    master.rumble(".");
     hang.set_value(false);
 
     // spin forwards, push lb motor up
+    float error = 6000 - lbRot.get_position();
+    ExitCondition pass(500, 250);
 
+    while(!pass.getExit()) {
+        left_dt.move_voltage(error * 1);
+        right_dt.move_voltage(error * 1);
+    }
 
     // engage hang piston, push lb back a little
 

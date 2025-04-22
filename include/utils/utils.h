@@ -5,10 +5,10 @@
 
 enum LBState {
     DOWN = 0,
-    READY = 4000,
+    READY = 4200,
     RAISED = -1,
-    DESCORE = 13500,
-    HANG = 6000
+    DESCORE = 16500,
+    HANG = 8000
 };
 
 enum RingState {

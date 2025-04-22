@@ -2,6 +2,7 @@
 #include "robot-config.h"
 #include "pros/rtos.hpp"
 #include "chassis/odom.h"
+#include "mcl.h"
 #include <vector>
 
 Pose odomPose(0, 0, 0.0);
@@ -10,6 +11,8 @@ Pose dPose(0, 0, 0);
 float prev_hori = 0;
 float prev_vertical = 0;
 float prev_imu = 0;
+
+pros::Task* trackingTask = nullptr;
 
 Pose getPose(bool radians) {
     if (radians) return odomPose;
@@ -66,7 +69,7 @@ void update() {
     // Safeguard against division by zero
     float localX = 0;
     float localY = 0;
-    if (std::abs(d_heading) < 1e-6) { // Small threshold to avoid divide by zero
+    if (std::abs(d_heading) == 0) { 
         localX = deltaX;
         localY = deltaY;
     } else {
@@ -94,4 +97,25 @@ void update() {
     dPose.y = ema((odomPose.y - prevPose.y) / 0.01, dPose.y, 0.95);
     dPose.theta = ema((odomPose.theta - prevPose.theta) / 0.01, dPose.theta, 0.95);
 
+    //mcl!
+
+    /*
+    float left = leftDist.get_distance() / 25.4;
+    float right = leftDist.get_distance() / 25.4;
+    std::vector<float> dist = {left, right};
+
+    motionUpdate(dPose);
+    sensorUpdate(dist);
+    resampleParticles();
+    */
+
+}
+
+void initOdom() {
+    trackingTask = new pros::Task{[=] {
+		while (true) {
+			update();
+			pros::delay(10);
+		}
+	}};
 }

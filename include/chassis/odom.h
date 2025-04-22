@@ -43,4 +43,4 @@ void update();
  * @brief Initialize the odometry system
  *
  */
-void init();
+void initOdom();
