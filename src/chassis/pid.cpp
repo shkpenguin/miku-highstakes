@@ -1,6 +1,6 @@
-#include "pid.h"
-#include "utils.h"
-#include "math.h"
+#include "chassis/pid.h"
+#include "utils/utils.h"
+#include "utils/math.h"
 
 PID::PID(float kP, float kI, float kD, float windupRange, bool signFlipReset, bool trapezoidal)
     : kP(kP),

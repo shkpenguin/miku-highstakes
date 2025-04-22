@@ -52,9 +52,6 @@ extern pros::Rotation vertical;
 
 extern pros::Optical optical;
 
-extern Constraints constraints;
-extern ProfileGenerator profileGenerator;
-
 extern pros::Distance leftDist;
 extern pros::Distance rightDist;
 

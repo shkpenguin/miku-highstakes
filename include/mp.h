@@ -16,39 +16,22 @@ struct Waypoint {
     float t;
 };
 
-Point getDerivative(Point p0, Point p1, Point p2, Point p3, float t) {
-    float u = 1 - t;
-    float b0 = 3 * u * u;
-    float b1 = 6 * u * t;
-    float b2 = 3 * t * t;
-    return p0 * b0 + p1 * b1 + p2 * b2;
-}
+Point getDerivative(Point p0, Point p1, Point p2, Point p3, float t);
 
-Point getSecondDerivative(Point p0, Point p1, Point p2, Point p3, float t) {
-    float u = 1 - t;
-    float b0 = 6 * u;
-    float b1 = 6 * t;
-    return p0 * b0 + p1 * b1;
-}
+Point getSecondDerivative(Point p0, Point p1, Point p2, Point p3, float t);
 
-float getCurvature(Point p0, Point p1, Point p2, Point p3, float t) {
-    Point d = getDerivative(p0, p1, p2, p3, t);
-    Point dd = getSecondDerivative(p0, p1, p2, p3, t);
-    return (d.x * dd.y - d.y * dd.x) / pow(d.x * d.x + d.y * d.y, 1.5);
-}
+float getCurvature(Point p0, Point p1, Point p2, Point p3, float t);
 
 class Path {
 
     public:
         Path() = default;
-        Path(std::vector<Waypoint> waypoints) : waypoints(waypoints) {}
-        Path(const Path& other) : waypoints(other.waypoints) {}
-        Path& operator=(const Path& other) {
-            if (this != &other) {
-                waypoints = other.waypoints;
-            }
-            return *this;
-        }
+        Path(Point p0, Point p1, Point p2, Point p3) : p0(p0), p1(p1), p2(p2), p3(p3) {};
+        Path(const Path& other) : waypoints(other.waypoints), p0(other.p0), p1(other.p1), p2(other.p2), p3(other.p3) {}
 
         std::vector<Waypoint> waypoints;
+        Point p0, p1, p2, p3;
+
+        void generateWaypoints();
+        std::vector<Waypoint> getWaypoints() { return waypoints; }
 };

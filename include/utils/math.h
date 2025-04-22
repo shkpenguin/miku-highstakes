@@ -44,3 +44,4 @@ float rot2inch(float circumference, float rot);
 
 float deg2inch(float circumference, float deg);
 
+float dist(float x1, float y1, float x2, float y2);

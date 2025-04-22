@@ -3,7 +3,7 @@
 #include "pros/rtos.hpp"
 #include "pros/imu.hpp"
 #include "utils/pose.h"
-#include "utils/pid.h"
+#include "chassis/pid.h"
 #include "utils/exitcondition.h"
 #include "api.h"
 #include "utils/math.h"
