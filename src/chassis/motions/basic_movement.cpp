@@ -84,13 +84,13 @@ void Chassis::moveTime(float time, float speed) {
     this->requestMotionStart();
     if (!this->motionRunning) return;
 
-    this->leftMotors->move_velocity(speed);
-    this->rightMotors->move_velocity(speed);
+    this->leftMotors->move(speed);
+    this->rightMotors->move(speed);
 
     pros::delay(time);
 
-    this->leftMotors->move_velocity(0);
-    this->rightMotors->move_velocity(0);
+    this->leftMotors->move(0);
+    this->rightMotors->move(0);
     this->endMotion();
 }
 

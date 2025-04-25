@@ -8,16 +8,19 @@
 #include "api.h"
 #include "utils/math.h"
 #include "utils/utils.h"
-#include "tbh.h"
+#include "drivetrain.h"
 
+/** 
+ * @param trapezoidal whether the integral is calculated with a trapezoidal riemann sum. false by default
+ */
 class ControllerSettings {
     public:
         ControllerSettings() 
             : kP(0), kI(0), kD(0), windupRange(0), smallError(0), smallErrorTimeout(0),
-              largeError(0), largeErrorTimeout(0), slew(0) {}
+              largeError(0), largeErrorTimeout(0), slew(0), trapezoidal(0) {}
 
         ControllerSettings(float kP, float kI, float kD, float windupRange, float smallError, float smallErrorTimeout,
-                           float largeError, float largeErrorTimeout, float slew)
+                           float largeError, float largeErrorTimeout, float slew, bool trapezoidal)
             : kP(kP),
               kI(kI),
               kD(kD),
@@ -26,7 +29,8 @@ class ControllerSettings {
               smallErrorTimeout(smallErrorTimeout),
               largeError(largeError),
               largeErrorTimeout(largeErrorTimeout),
-              slew(slew) {}
+              slew(slew),
+              trapezoidal(trapezoidal) {}
 
         float kP;
         float kI;
@@ -37,6 +41,7 @@ class ControllerSettings {
         float largeError;
         float largeErrorTimeout;
         float slew;
+        bool trapezoidal;
 };
 
 struct TurnToPointParams {
@@ -168,7 +173,7 @@ class Chassis {
 
         //chassis constructor:
 
-        Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
+        Chassis(Drivetrain drivetrain,
                 pros::Rotation* verticalTracker, pros::Rotation* horiTracker, ControllerSettings lateralSettings, 
                 ControllerSettings angularSettings);
 
@@ -220,7 +225,6 @@ class Chassis {
 
         PID angularPID;
 
-        TBH tbh;
     protected:
 
         void requestMotionStart();
@@ -237,8 +241,7 @@ class Chassis {
         ControllerSettings lateralSettings;
         ControllerSettings angularSettings;
 
-        pros::MotorGroup* leftMotors;
-        pros::MotorGroup* rightMotors;
+        Drivetrain drivetrain;
 
         pros::Rotation* verticalTracker;
         pros::Rotation* horiTracker;

@@ -34,6 +34,13 @@ float PID::update(const float error) {
     return error * kP + integral * kI + derivative * kD;
 }
 
+void PID::setGains(Gains gains) {
+    kP = gains.kP;
+    kI = gains.kI;
+    kD = gains.kD;
+    
+}
+
 void PID::reset() {
     integral = 0;
     prevError = 0;

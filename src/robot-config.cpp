@@ -1,5 +1,6 @@
 #include "api.h"
 #include "robot-config.h"
+#include "chassis/pid.h"
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -25,6 +26,48 @@ pros::Distance rightDist(16);
 pros::Rotation hori(-18);
 pros::Rotation vertical(17);
 
+// positional gain scheduling, made obsolete by PID velocity control
+/*
+std::vector<Gains> lateralGains = {
+    Gains(8, 0, 20), // no goal
+    Gains(8, 0, 20), // empty goal
+    Gains(8, 0, 20), // 1 ring
+    Gains(8, 0, 20), // 2 rings
+    Gains(8, 0, 20), // 3 rings
+    Gains(8, 0, 20), // 4 rings
+    Gains(8, 0, 20), // 5 rings
+    Gains(8, 0, 20), // 6 rings
+    Gains(8, 0, 20), // full goal
+};
+*/
+
+/*
+std::vector<Gains> angularGains = {
+    Gains(4, 0.15, 24), // no goal
+    Gains(4, 0.15, 24), // empty goal
+    Gains(4, 0.15, 24), // 1 ring
+    Gains(4, 0.15, 24), // 2 rings
+    Gains(4, 0.15, 24), // 3 rings
+    Gains(4, 0.15, 24), // 4 rings
+    Gains(4, 0.15, 24), // 5 rings
+    Gains(4, 0.15, 24), // 6 rings
+    Gains(4, 0.15, 24) // full goal
+};
+*/
+
+ControllerSettings velocitySettings(
+    0.5, // proportional gain (kP)
+    0.0, // integral gain (kI)
+    0.0, // derivative gain (kD)
+    0.0, // anti windup
+    0.0, // unused
+    0, // unused
+    0.0, // unused
+    0, // unused
+    0.0, // slew(not coded)
+    true // trapezoidal riemann sum
+);
+
 ControllerSettings lateralSettings(8, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               20, // derivative gain (kD)
@@ -33,19 +76,9 @@ ControllerSettings lateralSettings(8, // proportional gain (kP)
                                               100, // small error range timeout, in milliseconds
                                               1, // large error range, in inches
                                               500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
+                                              0, // maximum acceleration (slew)
+                                              false // no trapezoidal riemann sum
 );
-
-// ControllerSettings lateralGoalSettings(6, // proportional gain (kP)
-//                                               0, // integral gain (kI)
-//                                               20, // derivative gain (kD)
-//                                               0, // anti windup
-//                                               0, // small error range, in inches
-//                                               0, // small error range timeout, in milliseconds
-//                                               0, // large error range, in inches
-//                                               0, // large error range timeout, in milliseconds
-//                                               0 // maximum acceleration (slew)
-// );
 
 ControllerSettings angularSettings(4, // proportional gain (kP)
                                    0.15, // integral gain (kI)
@@ -55,7 +88,10 @@ ControllerSettings angularSettings(4, // proportional gain (kP)
                                    100, // small error range timeout, in milliseconds
                                    3, // large error range, in inches
                                    500, // large error range timeout, in milliseconds
-                                   0 // maximum acceleration (slew)
+                                   0, // maximum acceleration (slew)
+                                   true // trapezoidal riemann sum
 );
 
-Chassis miku(&left_dt, &right_dt, &vertical, &hori, lateralSettings, angularSettings);
+Drivetrain drivetrain(&left_dt, &right_dt, velocitySettings);
+
+Chassis miku(drivetrain, &vertical, &hori, lateralSettings, angularSettings);
