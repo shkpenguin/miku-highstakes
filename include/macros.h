@@ -3,11 +3,28 @@
 #include "utils/math.h"
 #include "utils/utils.h"
 
+enum LBState {
+    DOWN = 0,
+    READY = 3500,
+    RAISED = -1,
+    DESCORE = 16500,
+    HANG = 10000
+};
+
+enum RingState {
+    IN = 1,
+    OUT = 2
+};
+
 extern LBState currState;
 
 extern pros::Task lbTask;
+extern pros::Task userTask;
 
+void intakeControl();
 void lbControl();
+
+extern double target;
 
 extern int intakeVoltage;
 
@@ -28,5 +45,6 @@ extern Color currentColor;
 extern int jamTimer;
 
 void intakeControl();
+void driveControl();
 
 void t3();

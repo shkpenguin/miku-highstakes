@@ -16,22 +16,23 @@ struct Waypoint {
     float t;
 };
 
+Point getPoint(Point p0, Point p1, Point p2, Point p3, float t);
+
 Point getDerivative(Point p0, Point p1, Point p2, Point p3, float t);
 
 Point getSecondDerivative(Point p0, Point p1, Point p2, Point p3, float t);
 
-float getCurvature(Point p0, Point p1, Point p2, Point p3, float t);
+float getBezierCurvature(Point p0, Point p1, Point p2, Point p3, float t);
 
-class Path {
+class BezierCurve {
 
     public:
-        Path() = default;
-        Path(Point p0, Point p1, Point p2, Point p3) : p0(p0), p1(p1), p2(p2), p3(p3) {};
-        Path(const Path& other) : waypoints(other.waypoints), p0(other.p0), p1(other.p1), p2(other.p2), p3(other.p3) {}
+        BezierCurve() = default;
+        BezierCurve(Point p0, Point p1, Point p2, Point p3) : p0(p0), p1(p1), p2(p2), p3(p3) {};
+        BezierCurve(const BezierCurve& other) : waypoints(other.waypoints), p0(other.p0), p1(other.p1), p2(other.p2), p3(other.p3) {}
 
         std::vector<Waypoint> waypoints;
         Point p0, p1, p2, p3;
-
         void generateWaypoints();
         std::vector<Waypoint> getWaypoints() { return waypoints; }
 };

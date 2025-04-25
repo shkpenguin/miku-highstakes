@@ -26,6 +26,8 @@ public:
     // Call periodically (e.g., every 10ms)
     void update();
 
+    void reset();
+
 private:
     struct Channel {
         double volts       = 0;
@@ -38,10 +40,9 @@ private:
 
     double gain_;
     bool   enabled_;
-
-    // Maps desired velocity (percent) to feedforward voltage (mV)
-    double voltageLookup(double vel);
     
     // Core TBH calculation for one channel
     void calculate(Channel &ch);
 };
+
+double voltageLookup(double vel);

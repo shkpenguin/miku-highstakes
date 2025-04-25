@@ -4,7 +4,7 @@
 
 extern Pose odomPose;
 
-Pose getPose(bool radians = false);
+Pose getPose(bool radians = false, bool standardPos = false);
 /**
  * @brief Set the Pose of the robot
  *
@@ -43,4 +43,4 @@ void update();
  * @brief Initialize the odometry system
  *
  */
-void initOdom();
+void initOdom(Pose start);

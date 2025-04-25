@@ -5,6 +5,7 @@
 #include "mcl.h"
 #include <vector>
 
+Pose prevPose(0, 0, 0.0);
 Pose odomPose(0, 0, 0.0);
 Pose dPose(0, 0, 0);
 
@@ -14,9 +15,11 @@ float prev_imu = 0;
 
 pros::Task* trackingTask = nullptr;
 
-Pose getPose(bool radians) {
-    if (radians) return odomPose;
-    else return Pose(odomPose.x, odomPose.y, rad2deg(odomPose.theta));
+Pose getPose(bool radians, bool standardPos) {
+    Pose pose = odomPose;
+    if (standardPos) pose.theta = M_PI_2 - pose.theta;
+    if (!radians) pose.theta = rad2deg(pose.theta);
+    return pose;
 }
 
 void setPose(Pose pose, bool radians) {
@@ -81,41 +84,42 @@ void update() {
     prev_vertical = vert_raw;
 
     // Save previous pose
-    Pose prevPose = odomPose;
+    prevPose = odomPose;
+
+    dPose.x = localY * std::sin(avgHeading);
+    dPose.y = localY * std::cos(avgHeading);
+    dPose.x += localX * -std::cos(avgHeading);
+    dPose.y += localX * std::sin(avgHeading);
 
     // Calculate global x and y
-    odomPose.x += localY * std::sin(avgHeading);
-    odomPose.y += localY * std::cos(avgHeading);
-    odomPose.x += localX * -std::cos(avgHeading);
-    odomPose.y += localX * std::sin(avgHeading);
+    odomPose.x += dPose.x;
+    odomPose.y += dPose.y;
     odomPose.theta = heading;
-
-    // Debug logging for troubleshooting
-
-    // Calculate speed
-    dPose.x = ema((odomPose.x - prevPose.x) / 0.01, dPose.x, 0.95);
-    dPose.y = ema((odomPose.y - prevPose.y) / 0.01, dPose.y, 0.95);
-    dPose.theta = ema((odomPose.theta - prevPose.theta) / 0.01, dPose.theta, 0.95);
-
-    //mcl!
-
-    /*
-    float left = leftDist.get_distance() / 25.4;
-    float right = leftDist.get_distance() / 25.4;
-    std::vector<float> dist = {left, right};
-
-    motionUpdate(dPose);
-    sensorUpdate(dist);
-    resampleParticles();
-    */
 
 }
 
-void initOdom() {
+void initOdom(Pose start) {
+    setPose(start);
     trackingTask = new pros::Task{[=] {
-		while (true) {
-			update();
-			pros::delay(10);
-		}
-	}};
+	while (true) {
+		update();
+        motionUpdate(Point(getSpeed().x, getSpeed().y));
+
+        std::vector<float> sensors = {
+            static_cast<float>(leftDist.get() / 25.4),
+            static_cast<float>(rightDist.get() / 25.4)
+        };
+
+        bool valid = sensorUpdate(sensors);
+
+        if (valid) {
+            Pose estPose(getEstimate().x, getEstimate().y, getPose(true).theta);
+            setPose(estPose, true);
+            resampleParticles();
+            injectAroundEstimate(0.5, 5.0);  // Only when we have good data
+        }
+
+		pros::delay(10);
+	}
+}};
 }

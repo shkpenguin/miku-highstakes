@@ -1,6 +1,10 @@
 #include "macros.h"
 #include "robot-config.h"
 #include "utils/utils.h"
+#include "pros/adi.hpp"
+#include "pros/misc.hpp"
+#include "utils/timer.h"
+#include "chassis/odom.h"
 
 double target = DOWN;
 double previous_error = lbRot.get_position();
@@ -15,27 +19,23 @@ void lbControl() {
             if(currState == DESCORE) target += 1200;
             else {
                 currState = RAISED;
-                lb.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
             }
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
-            if(currState == DOWN) {
-                currState = READY;
-                target = READY;
-                lb.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-            }
-            else {
+            if(currState == READY) {
                 currState = DOWN;
                 target = DOWN;
-                lb.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+            }
+            else {
+                currState = READY;
+                target = READY;
             }
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
             currState = DESCORE;
             target = DESCORE;
-            lb.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
@@ -48,17 +48,20 @@ void lbControl() {
             }
         }
 
-        if(currState != RAISED) { 
-            double error = target - lbRot.get_position();
-            double derivative = error - previous_error;
-            lb.move_voltage(error * 1.5 + derivative * 10);
-            previous_error = error;
-        }
-
         if(currState == RAISED) { 
-            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) lb.move_voltage(12000);
-            else lb.move_voltage(0);
+            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+                lb.move_voltage(12000);
+            } else {
+                lb.move_voltage(0);
+            }
+            pros::delay(10);
+            continue;
         }
+ 
+        double error = target - lbRot.get_position();
+        double derivative = error - previous_error;
+        lb.move_voltage(error * 2 + derivative * 15);
+        previous_error = error;
 
         pros::delay(10);
 
@@ -69,17 +72,17 @@ void lbControl() {
 int intakeVoltage = 0;
 
 // allows toggling colorsort/antijam
-// bool enableColorSort = true;
+bool enableColorSort = true;
 bool enableAntiJam = true;
 
 // colorsort management
-// ringState currRing = OUT;
-// double hue;
-// double proximity;
-// double error = 0.4;
-// double start = 0;
-// Color sortColor;
-// Color currentColor = NONE;
+RingState currRing = OUT;
+double hue;
+double proximity;
+double error = 0.9;
+double start = 0;
+Color sortColor = BLUE;
+Color currentColor = NONE;
 
 // antijam management
 int jamTimer = 0;
@@ -94,53 +97,39 @@ void intakeControl() {
             // L2 intake reverse
             else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) intakeVoltage = -12000;
             else intakeVoltage = 0;
-
-            // color sort toggle
-            // if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) { 
-            //     enableColorSort = !enableColorSort;
-            //     controller.rumble("-");
-            // }
         }
         
         // prevent led from burning out 
-        // if(intakeVoltage > 0) optical.set_led_pwm(100);
-        // else optical.set_led_pwm(0);
+        if(intakeVoltage > 0) optical.set_led_pwm(100);
+        else optical.set_led_pwm(0);
 
-        /*
-        if(enableColorSort && currState != READY) { // dont run if lb is currently in ready pos
+        if(enableColorSort && currState != READY) { 
         
             // update sensor values
             hue = optical.get_hue();
             proximity = optical.get_proximity();
 
-            if(currRing == OUT && proximity > 150) { // something is in the intake, colorsort is not actively running
+            if(currRing == OUT && proximity > 50) { // something is in the intake, colorsort is not actively running
                 if(hue < 5 || hue > 330) { 
                     currentColor = RED;
-                } else if(hue > 220 && hue < 240) {
+                } else if(hue > 210 && hue < 250) {
                     currentColor = BLUE;
                 } else currentColor = NONE;
                 if(currentColor == sortColor) { // if the color we just detected matches 
-                    currRing = COLOR; // stop checking for color, start colorsort 
+                    currRing = IN; // stop checking for color, start colorsort 
+                    start = intake.get_position(); 
                 } else currRing = OUT;
             }
-            else if(currRing == COLOR) { 
-                if(dist.get_distance() < 10) {
-                    currRing = DIST;
-                    controller.rumble(".");
-                }
-                start = intake.get_position();
-            }
-            else if(currRing == DIST) {
+            else if(currRing == IN) {
                 if(intake.get_position() > start + error) { // if the position has passed far enough
                     currRing = OUT; // start checking for rings again
                     currentColor = NONE; // reset color
                     intake.move_voltage(-12000); // spin back 0.1s
-                    pros::delay(100);
+                    pros::delay(50);
                     intake.move_voltage(0);
                 } 
             }
         }
-        */
 
         // anti-jam: if it is jamming, we increase the timer by 10(since the loop runs each 10ms), otherwise we reset to 0
         // conditions for jamming:
@@ -166,13 +155,53 @@ void intakeControl() {
 
 }
 
+void setup() {
+    initOdom(Pose(0, 0, 0));
+    miku.turnToHeading(33, 10000);
+}
+
+bool hanging = false;
+bool clampEnable = true;
+bool pisEnable = true;
+
+void driveControl() {
+    while (true) {
+        if (hanging) break;
+        int dir = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);   
+        int turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);  
+        miku.arcade(dir, turn);
+
+        // clamp control here because why not
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
+            clamp.set_value(clampEnable);
+            clampEnable = !clampEnable;
+        }
+
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) && master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+            setup();
+        }
+
+        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
+        //     asmacro();
+        // }
+
+        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+        //     pistake.set_value(pisEnable);
+        //     pisEnable = !pisEnable;
+        // }
+        
+        pros::delay(10);
+    }
+}
+
 void t3() {
 
-    pto.set_value(false);
+    pto.set_value(true);
     pros::delay(200);
 
+    hanging = true;
     currState = RAISED;
-    
+
     /*
     * pass requirements:
     * 1. lb has reached 5 degrees
@@ -180,14 +209,18 @@ void t3() {
     * 3. 3-4 seconds have passed
     */
     // drive backwards while pushing down lb motor slowly(torquemaxxing)
-    
-    while(lbRot.get_position() > 100) {
-        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) break;
-        left_dt.move_velocity(-12000);
-        right_dt.move_velocity(-12000);
-        lb.move_velocity(-2000);
+    Timer timer(5000);
+
+    while(sanitizeAngle(lb.get_position()) > -1500) {
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A) || timer.isDone()) break;
+        left_dt.move_voltage(-12000);
+        right_dt.move_voltage(-12000);
+        lb.move_voltage(-2000);
         pros::delay(10);
     }
+    left_dt.move_voltage(0);
+    right_dt.move_voltage(0);
+    lb.move_voltage(0);
     master.rumble(".");
     hang.set_value(false);
 

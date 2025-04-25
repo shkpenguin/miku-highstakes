@@ -3,26 +3,34 @@
 #include <cstdlib>
 #include <limits>
 #include <vector>
+#include <numeric>
 
 std::vector<Particle> particles;
 
-void motionUpdate(Pose delta) {
+void motionUpdate(Point delta) {
     for (auto& p : particles) {
-        float dx = delta.x + randomGaussian(0, 0.1);
-        float dy = delta.y + randomGaussian(0, 0.1);
-        float dtheta = delta.theta + randomGaussian(0, deg2rad(1));
+        
+        // Apply noise to the delta values for each particle to simulate odometry error
+        float dx = delta.x + randomGaussian(0, 0.1);  // Reduced noise for x movement
+        float dy = delta.y + randomGaussian(0, 0.1);  // Reduced noise for y movement
 
-        // Local to global transformation
-        float sinT = sin(p.pose.theta);
-        float cosT = cos(p.pose.theta);
+        // Update particle's position
+        p.point.x += dx;
+        p.point.y += dy;
 
-        float global_dx = dx * cosT - dy * sinT;
-        float global_dy = dx * sinT + dy * cosT;
+        p.point.x = std::clamp(p.point.x, static_cast<double>(-HALF), static_cast<double>(HALF));
+        p.point.y = std::clamp(p.point.y, static_cast<double>(-HALF), static_cast<double>(HALF));    
 
-        p.pose.x += global_dx;
-        p.pose.y += global_dy;
-        p.pose.theta += dtheta;
+
     }
+}
+
+float computeESS() {
+    float sumSq = 0;
+    for (auto& p : particles) {
+        sumSq += p.weight * p.weight;
+    }
+    return (sumSq > 0) ? 1.0f / sumSq : 0.0f;
 }
 
 inline float randUniform() {
@@ -80,7 +88,7 @@ float randomGaussian(float mean, float stddev) {
     return mag * cos(2 * M_PI * u2) * stddev + mean;
 }
 
-Pose sampleAroundPose(const Pose& center, float stddevX, float stddevY, float stddevTheta) {
+Point sampleAroundPoint(const Point& center, float stddevX, float stddevY) {
     float x, y;
 
     // Keep resampling until within bounds
@@ -89,27 +97,19 @@ Pose sampleAroundPose(const Pose& center, float stddevX, float stddevY, float st
         y = randomGaussian(center.y, stddevY);
     } while (x < -72 || x > 72 || y < -72 || y > 72);
 
-    float theta = randomGaussian(center.theta, stddevTheta);
-
-    return Pose(x, y, theta);
+    return Point(x, y);
 }
 
 void initParticles() {
-    Pose center = getPose(true);  // Make sure you're using radians
+    Point center = Point(getPose().x, getPose().y);  // Make sure you're using radians
     particles.clear();
     particles.reserve(NUM_PARTICLES);
 
     for (int i = 0; i < NUM_PARTICLES; i++) {
-        Pose pose = sampleAroundPose(center, 4.0, 4.0, deg2rad(5)); // tweak stddevs as needed
-        particles.push_back(Particle{pose, 1.0f / NUM_PARTICLES});
+        Point point = sampleAroundPoint(center, 4.0, 4.0); // tweak stddevs as needed
+        particles.push_back(Particle{point, 1.0f / NUM_PARTICLES});
     }
 }
-
-const float HALF = 72.0f;
-const float INF  = std::numeric_limits<float>::infinity();
-
-constexpr float hx   = 12;  // 12″
-constexpr float vy   = 2;    //  2″
 
 /** returns parametric “t” to hit first wall from (ox,oy) in direction θ (math frame) */
 float rayDistanceToWall(float ox, float oy, float θ) {
@@ -147,9 +147,9 @@ float rayDistanceToWall(float ox, float oy, float θ) {
   return tMin;  // since (dx,dy) is unit length, tMin is actual distance
 }
 
-std::vector<float> estimateDistance(const Pose& pose) {
+std::vector<float> estimateDistance(const Point& point) {
   // 1) compass→math conversion: 0° compass → +Y world → math π/2
-  float θm = M_PI_2 - pose.theta;
+  float θm = M_PI_2 - getPose(true).theta;
 
   // 2) precompute sin/cos
   float c = std::cos(θm), s = std::sin(θm);
@@ -157,10 +157,10 @@ std::vector<float> estimateDistance(const Pose& pose) {
   // 3) body‑frame offsets (x_b=forward, y_b=left/right)
   //    left sensor  = (+vy forward, +hx left)
   //    right sensor = (+vy forward, -hx left)
-  float lx = pose.x +  vy*c -  hx*s;
-  float ly = pose.y +  vy*s +  hx*c;
-  float rx = pose.x +  vy*c - (-hx)*s;
-  float ry = pose.y +  vy*s + (-hx)*c;
+  float lx = point.x +  vy*c -  hx*s;
+  float ly = point.y +  vy*s +  hx*c;
+  float rx = point.x +  vy*c - (-hx)*s;
+  float ry = point.y +  vy*s + (-hx)*c;
 
   // 4) firing angles (math frame): left = θm+90°, right = θm–90°
   float lth = θm + M_PI_2;
@@ -177,16 +177,33 @@ std::vector<float> estimateDistance(const Pose& pose) {
   return dist;
 }
 
-void sensorUpdate(const std::vector<float>& actual) {
-    // actual[0] = left sensor, actual[1] = right sensor
-    const float sigmaLeft  = 2.0f;
-    const float sigmaRight = 2.0f;
-    const float MAX_ERROR = 5.0f;
+Point getEstimate() {
+    float sumWeights = 0.0f;
+    float meanX = 0.0f;
+    float meanY = 0.0f;
 
+    for (const auto& p : particles) {
+        float w = p.weight;
+        meanX += p.point.x * w;
+        meanY += p.point.y * w;
+        sumWeights += w;
+    }
+
+    if (sumWeights > 0) {
+        meanX /= sumWeights;
+        meanY /= sumWeights;
+    }
+
+    return Point(meanX, meanY);
+}
+
+bool sensorUpdate(const std::vector<float>& actual) {
+    const float MAX_ERROR = 4.0f;
     float totalW = 0.0f;
+    bool anyValid = false;
 
     for (auto& p : particles) {
-        auto pred = estimateDistance(p.pose);
+        auto pred = estimateDistance(p.point);
 
         bool useL = (pred[0] != -1 && actual[0] != -1 &&
                      std::abs(pred[0] - actual[0]) <= MAX_ERROR);
@@ -195,15 +212,14 @@ void sensorUpdate(const std::vector<float>& actual) {
 
         float weight = 1.0f;
         if (useL) {
-            float errL = pred[0] - actual[0];
-            weight *= gaussianPDF(errL, sigmaLeft);
+            weight *= gaussianPDF(pred[0] - actual[0], 1.0f);
+            anyValid = true;
         }
         if (useR) {
-            float errR = pred[1] - actual[1];
-            weight *= gaussianPDF(errR, sigmaRight);
+            weight *= gaussianPDF(pred[1] - actual[1], 1.0f);
+            anyValid = true;
         }
 
-        // If neither is valid, default to neutral weight
         if (!useL && !useR) {
             weight = 1e-6f;
         }
@@ -212,85 +228,64 @@ void sensorUpdate(const std::vector<float>& actual) {
         totalW += weight;
     }
 
-    // Normalize or fallback to uniform if total weight is zero
     if (totalW > 0.0f) {
-        for (auto& p : particles) {
-            p.weight /= totalW;
-        }
+        for (auto& p : particles) p.weight /= totalW;
     } else {
         float uniform = 1.0f / particles.size();
-        for (auto& p : particles) {
-            p.weight = uniform;
-        }
+        for (auto& p : particles) p.weight = uniform;
     }
+
+    return anyValid;
 }
 
 void resampleParticles() {
+    int N = particles.size();
     std::vector<Particle> newP;
-    newP.reserve(particles.size());
+    newP.reserve(N);
 
-    // Bias settings
-    const float biasRatio = 0.1f;               // 10% biased particles
-    const int numBiased = particles.size() * biasRatio;
-    const int numRandom = particles.size() - numBiased;
-
-    // ----------------------------
-    // 1. Regular low-variance resampling for (1 - biasRatio) particles
-    float invN = 1.0f / particles.size();
-    float r = randUniform() * invN;
-    float c = particles[0].weight;
-    int i = 0;
-
-    for (int m = 0; m < numRandom; m++) {
+    float invN = 1.0f / N;
+    float r    = randUniform() * invN;
+    float c    = particles[0].weight;
+    int   idx  = 0;
+    for (int m = 0; m < N; ++m) {
         float U = r + m * invN;
-        while (U > c && i < (int)particles.size() - 1) {
-            i++;
-            c += particles[i].weight;
+        while (U > c && idx < N-1) {
+            idx++;
+            c += particles[idx].weight;
         }
-        newP.push_back(particles[i]);
-        newP.back().weight = invN;  // temp uniform
+        newP.push_back(particles[idx]);
+        newP.back().weight = invN;
     }
-
-    // ----------------------------
-    // 2. Inject particles near current estimate
-    Pose estimate = getEstimateFromParticles();
-    for (int i = 0; i < numBiased; i++) {
-        Particle p;
-        // Add small Gaussian noise around estimate
-        p.pose.x = estimate.x + randNormal(0.0f, 1.0f);  // 1 inch std dev
-        p.pose.y = estimate.y + randNormal(0.0f, 1.0f);
-        p.pose.theta = estimate.theta + randNormal(0.0f, 0.05f);  // ~3 deg
-        p.weight = invN;
-        newP.push_back(p);
-    }
-
-    // Replace old set
     particles.swap(newP);
 }
 
-Pose getEstimateFromParticles() {
-    float sumWeights = 0.0f;
-    float meanX = 0.0f;
-    float meanY = 0.0f;
-    float sinTheta = 0.0f;
-    float cosTheta = 0.0f;
+void injectAroundEstimate(float essThresholdRatio, float sigma) { 
+    int N        = particles.size();
+    float ESS    = computeESS();
+    float target = essThresholdRatio * N;
+    if (ESS >= target) return;  // still plenty of diversity!
 
-    for (const auto& p : particles) {
-        float w = p.weight;
-        meanX += p.pose.x * w;
-        meanY += p.pose.y * w;
-        sinTheta += std::sin(p.pose.theta) * w;
-        cosTheta += std::cos(p.pose.theta) * w;
-        sumWeights += w;
+    // how many to inject?
+    int K = static_cast<int>(target - ESS + 0.5f);
+    if (K <= 0) return;
+
+    // find worst‑weighted K indices
+    std::vector<int> idx(N);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(),
+              [&](int a, int b){
+                  return particles[a].weight < particles[b].weight;
+              });
+
+    // get your best estimate
+    Point mean = getEstimate();
+
+    // replace the K worst particles
+    float uniformW = 1.0f / N;
+    for (int i = 0; i < K; ++i) {
+        int bad = idx[i];
+        particles[bad].point.x     = mean.x     + randNormal(0.0f, sigma);
+        particles[bad].point.y     = mean.y     + randNormal(0.0f, sigma);
+        particles[bad].weight     = uniformW;
     }
-
-    if (sumWeights > 0) {
-        meanX /= sumWeights;
-        meanY /= sumWeights;
-        sinTheta /= sumWeights;
-        cosTheta /= sumWeights;
-    }
-
-    float meanTheta = std::atan2(sinTheta, cosTheta);
-    return Pose(meanX, meanY, meanTheta);
 }

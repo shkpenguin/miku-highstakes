@@ -16,8 +16,6 @@ double bezierLength(Point p0, Point p1, Point p2, Point p3, int steps = 100) {
     return length;
 }
 
-
-
 Point getPoint(Point p0, Point p1, Point p2, Point p3, float t) {
     float u = 1 - t;
     float b0 = u * u * u;
@@ -42,20 +40,20 @@ Point getSecondDerivative(Point p0, Point p1, Point p2, Point p3, float t) {
     return p0 * b0 + p1 * b1;
 }
 
-float getCurvature(Point p0, Point p1, Point p2, Point p3, float t) {
+float getBezierCurvature(Point p0, Point p1, Point p2, Point p3, float t) {
     Point d = getDerivative(p0, p1, p2, p3, t);
     Point dd = getSecondDerivative(p0, p1, p2, p3, t);
     return (d.x * dd.y - d.y * dd.x) / pow(d.x * d.x + d.y * d.y, 1.5);
 }
 
-Path& Path::operator=(const Path& other) {
-    if (this != &other) {
-        waypoints = other.waypoints;
-    }
-    return *this;
-}
+// Path& Path::operator=(const Path& other) {
+//     if (this != &other) {
+//         waypoints = other.waypoints;
+//     }
+//     return *this;
+// }
 
-void Path::generateWaypoints() {
+void BezierCurve::generateWaypoints() {
 
     // Number of waypoints to generate
     double currentTime = 0;
@@ -80,7 +78,7 @@ void Path::generateWaypoints() {
         Point acceleration = getSecondDerivative(p0, p1, p2, p3, t);
 
         // Calculate curvature (how much the path is turning)
-        float curvature = getCurvature(p0, p1, p2, p3, t);
+        float curvature = getBezierCurvature(p0, p1, p2, p3, t);
 
         // Linear velocity (simplified, could use specific logic based on your needs)
         float linearVelocity = velocity.x * velocity.x + velocity.y * velocity.y;

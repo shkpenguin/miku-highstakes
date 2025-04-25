@@ -2,7 +2,7 @@
 
 #include "chassis/chassis.h"
 #include "api.h"
-#include "mp.h"
+#include "utils/mp.h"
 
 // odom settings
 
@@ -11,7 +11,7 @@
 #define TRACKING_WHEEL_DIAMETER 2.75
 #define VERTICAL_OFFSET 0.0
 #define HORIZONTAL_OFFSET -2.5
-#define HORIZONTAL_DRIFT 2.0
+#define HORIZONTAL_DRIFT 10.0
 
 // mcl
 
@@ -19,7 +19,7 @@
 #define VERTICAL_DIST_OFFSET 2
 
 // arcade control settings
-#define DEADBAND 3
+#define DEADBAND 5
 #define MIN_SPEED 10
 #define EXPO_CURVE_GAIN 1.019
 
@@ -39,7 +39,6 @@ extern pros::adi::DigitalOut clamp;
 // extern pros::adi::DigitalOut pistake;
 extern pros::adi::DigitalOut hang;
 extern pros::adi::DigitalOut pto;
-extern pros::Distance dist;
 
 extern pros::Motor intake;
 extern pros::Imu imu;

@@ -3,6 +3,7 @@
 #include "main.h"
 #include "routes.h"
 #include "utils/utils.h"
+#include "chassis/odom.h"
 
 void calibrateIMU() {
     int attempt = 1;
@@ -87,7 +88,7 @@ void Chassis::cancelAllMotions() {
 bool Chassis::isInMotion() const { return this->motionRunning; }
 
 void Chassis::resetLocalPosition() {
-    float theta = this->getPose().theta;
+    float theta = getPose().theta;
     setPose(Pose(0, 0, theta), false);
 }
 

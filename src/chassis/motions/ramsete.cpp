@@ -1,5 +1,5 @@
 #include "chassis/chassis.h"
-#include "mp.h"
+#include "utils/mp.h"
 #include "utils/timer.h"
 #include "chassis/odom.h"
 #include "robot-config.h"
@@ -21,7 +21,7 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
     Timer timer(timeout);
 
-    Path p = Path(p0, p1, p2, p3);
+    BezierCurve p = BezierCurve(p0, p1, p2, p3);
     p.generateWaypoints();
     int currentWaypoint = 0;
     int waypointCount = p.waypoints.size();
@@ -30,7 +30,7 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
     // Chassis::tbh.setGain(25.0);
 
     while(!timer.isDone() && this->motionRunning && (!lateralLargeExit.getExit() && !lateralSmallExit.getExit())) {
-        Pose pose = this->getPose();
+        Pose pose = getPose();
         double robot_x = pose.x;
         double robot_y = pose.y;
         double robot_theta = pose.theta;

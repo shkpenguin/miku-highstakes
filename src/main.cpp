@@ -7,37 +7,47 @@
 #include "pros/adi.hpp"
 #include "utils/pose.h"
 #include "chassis/mcl.h"
+#include "selector.h"
+#include "routes.h"
 
 std::string error_msg = "";
 int display = 0;
-int options = 7;
+int options = 9;
 
-void on_center_button() {
-	
+void on_center_button()
+{
 }
 
-void initialize() {
+void initialize()
+{
+
+	// initSelector();
+	selectedAuton = Auton(BLUE, "Blue 6 Ring", blueRing, Pose(11, -52.5, 213));
 
 	display = 0;
 
 	vertical.reset_position();
 	hori.reset_position();
-	
+
 	intake.tare_position();
 	lbRot.reset_position();
+	lbRot.set_position(READY);//fix later
+
+	optical.set_integration_time(5);
 
 	imu.reset();
-	while(imu.is_calibrating()) {
+	while (imu.is_calibrating())
+	{
 		pros::delay(10);
 	}
 
-	initOdom();
-	
 	pros::Task intakeTask(intakeControl);
 	pros::Task lbTask(lbControl);
-	pros::Task controllerDisplay = pros::Task([] {
+
+	pros::Task controllerDisplay = pros::Task([]
+											  {
 		while (true) {
-			std::vector<float> dist = estimateDistance(getPose(true));
+			std::vector<float> dist = estimateDistance(Point(getPose().x, getPose().y));
 			if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
 				display = (display + 1) % options;
 			}
@@ -47,8 +57,9 @@ void initialize() {
 			if(error_msg == "") {
 				switch (display) {
 					case 0:
-						master.set_text(0, 0, std::to_string(dist[0]) 
-						+ " " + std::to_string(dist[1]));
+						master.set_text(0, 0, _1f(getPose().x)
+						+ " " + _1f(getPose().y)
+						+ " " + _1f(getPose().theta));
 						pros::delay(100);
 						break;
 					case 1: 
@@ -58,16 +69,17 @@ void initialize() {
 						pros::delay(100);
 						break;
 					case 2: 
-						master.set_text(0, 0, _2f(leftDist.get_distance() / 25.4) 
-						+ " " + _2f(rightDist.get_distance() / 25.4));
+						master.set_text(0, 0, _2f(getSpeed().x) 
+						+ " " + _2f(getSpeed().y)
+						+ " " + _2f(getSpeed(true).theta));
 						pros::delay(100);
 						break;
 					case 3:
-						master.set_text(0, 0, "LB: " + _2f(lbRot.get_position()));
+						master.set_text(0, 0, "LB: " + std::to_string(lbRot.get_position()));
 						pros::delay(100);
 						break;
 					case 4:
-						master.set_text(0, 0, "Intake: " + _2f(intake.get_position()));
+						master.set_text(0, 0, _2f(intake.get_position()) + " " + _2f(optical.get_proximity()));
 						pros::delay(100);
 						break;
 					case 5:
@@ -78,59 +90,41 @@ void initialize() {
 						master.set_text(0, 0, "Vert: " + _2f(vertical.get_position()));
 						pros::delay(100);
 						break;
+					case 7:
+						master.set_text(0, 0, "Dist: " + _2f(leftDist.get()) + " " + _2f(rightDist.get()));
+						pros::delay(100);
+						break;
+					case 8:
+						master.set_text(0, 0, "Est: " + _2f(dist[0]) + " " + _2f(dist[1]));
+						pros::delay(100);
+						break;
 				}
-					
 			} else {
 				master.set_text(0, 0, error_msg);
 				pros::delay(100);
 			}
-		}
-	});
-
+		} });
 }
 
-void disabled() {
-
+void disabled()
+{
 }
 
-void competition_initialize() {
-
+void competition_initialize()
+{
 }
 
-void autonomous() {
+void autonomous()
+{
 
-	initOdom();
+	sortColor = static_cast<Color>(-1 * (selectedAuton.color));
+	initOdom(selectedAuton.start);
 	initParticles();
-
+	selectedAuton.func();
+	
 }
 
-bool clampEnable = true;
-bool pisEnable = true;
-
-void opcontrol() {
-
-	while (true) {
-
-		int dir = master.get_analog(ANALOG_LEFT_Y);   
-		int turn = master.get_analog(ANALOG_RIGHT_X);  
-		miku.arcade(dir, turn);
-
-		// clamp control here because why not
-        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
-            clamp.set_value(clampEnable);
-            clampEnable = !clampEnable;
-        }
-
-        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
-        //     asmacro();
-        // }
-
-        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
-        //     pistake.set_value(pisEnable);
-        //     pisEnable = !pisEnable;
-        // }
-		
-		pros::delay(10);
-
-	}
+void opcontrol()
+{
+	pros::Task userTask(driveControl);
 }

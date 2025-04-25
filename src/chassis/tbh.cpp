@@ -41,8 +41,8 @@ void TBH::update() {
     if (!enabled_) return;
 
     // Read current velocities
-    double rightVel = avg(left_dt.get_actual_velocity_all());
-    double leftVel  = avg(right_dt.get_actual_velocity_all());
+    double leftVel = avg(left_dt.get_actual_velocity_all());
+    double rightVel  = avg(right_dt.get_actual_velocity_all());
 
     // Compute errors
     right_.error = right_.target - rightVel;
@@ -57,65 +57,65 @@ void TBH::update() {
     right_dt.move_voltage(right_.volts);
 }
 
-void TBH::calculate(Channel &ch) {
-    // Increment voltage by proportional term
-    ch.volts += gain_ * ch.error;
-    // Clamp output to ±12V (in mV units)  
-    if (std::abs(ch.volts) > 12000) {
-        ch.volts = std::copysign(12000.0, ch.volts);
-    }
-    
-    // Detect zero-crossing of error
-    bool signChange = (ch.prevError > 0) != (ch.error > 0);
-    if (signChange) {
-        if (ch.hardTBH) {
-            // On first zero-cross, use feedforward TBH value
-            ch.volts    = ch.tbh;
-            ch.hardTBH  = false;
-        } else {
-            // Subsequent crosses: average with previous TBH
-            ch.volts    = 0.5 * (ch.volts + ch.tbh);
-            ch.tbh      = ch.volts;
-        }
-    }
-    ch.prevError = ch.error;
+void TBH::reset() {
+    left_.tbh = 0;
+    right_.tbh = 0;
+    left_.error = 0;
+    right_.error = 0;
+    left_.prevError = 0;
+    right_.prevError = 0;
 }
 
-// Linear interpolation lookup from velocity to feedforward voltage
-double TBH::voltageLookup(double vel) {
-    static const double table[25][2] = {
-        {-12000, -100.0}, {-11000, -91}, {-10000, -82}, {-9000, -73.7},
-        {-8000,  -64.4}, {-7000, -55.6}, {-6000, -46.7}, {-5000, -37.3},
-        {-4000,  -29.1}, {-3000, -20.5}, {-2000, -11.1}, {-1000,  -3.9},
-        {     0,   0.0}, { 1000,   2.7}, { 2000,  10.3}, { 3000,  19.6},
-        { 4000,  27.9}, { 5000,  36.1}, { 6000,  45.3}, { 7000,  54.4},
-        { 8000,  63.2}, { 9000,  72.6}, {10000,  81.0}, {11000,  90.0},
-        {12000, 100.0}
+// Linear interpolation: %velocity → feedforward voltage (mV)
+double voltageLookup(double vel) {
+    // Lookup table: { percent velocity, voltage in millivolts }
+    static const double table[29][2] = {
+        {-12000, -640},
+        {-11000, -590},
+        {-10000, -550},
+        {-9000, -490},
+        {-8000, -430},
+        {-7000, -370},
+        {-6000, -310},
+        {-5000, -240},
+        {-4000, -180},
+        {-3000, -130},
+        {-2000, -65},
+        {-1500, -40},
+        {-1000, 0},
+        {-500, 0},
+        {0, 0},
+        {500, 0},
+        {1000, 0},
+        {1500, 40},
+        {2000, 65},
+        {3000, 130},
+        {4000, 180},
+        {5000, 240},
+        {6000, 310},
+        {7000, 370},
+        {8000, 430},
+        {9000, 490},
+        {10000, 550},
+        {11000, 590},
+        {12000, 640}
     };
-    
-    // Estimate index
-    int idx = static_cast<int>((vel + 100.0) / 200.0 * 24.0);
-    idx = std::clamp(idx, 0, 24);
 
-    // Find interval
-    if (table[idx][1] == vel) {
-        return table[idx][0];
-    }
-    int low = idx;
-    if (table[low][1] > vel) {
-        while (low > 0 && table[low][1] > vel) {
-            low--;
+    // Clamp input to the table range
+    vel = std::clamp(vel, -100.0, 100.0);
+
+    // Find the surrounding points for interpolation
+    for (int i = 0; i < 24; ++i) {
+        double v0 = table[i][0];
+        double v1 = table[i + 1][0];
+        if (vel >= v0 && vel <= v1) {
+            double m0 = table[i][1];
+            double m1 = table[i + 1][1];
+            double frac = (vel - v0) / (v1 - v0);
+            return m0 + frac * (m1 - m0);
         }
-    } else {
-        while (low < 24 && table[low][1] < vel) {
-            low++;
-        }
-        low--;
     }
-    double v0 = table[low][1];
-    double v1 = table[low + 1][1];
-    double m0 = table[low][0];
-    double m1 = table[low + 1][0];
-    double frac = (vel - v0) / (v1 - v0);
-    return m0 + frac * (m1 - m0);
+
+    // If we get here, return max/min
+    return (vel < 0) ? -12000 : 12000;
 }

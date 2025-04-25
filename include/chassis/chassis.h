@@ -100,7 +100,7 @@ struct SwingToHeadingParams {
         float earlyExitRange = 0;
 };
 
-struct MoveToPoseParams {
+struct BoomerangParams {
         /** whether the robot should move forwards or backwards. True by default */
         bool forwards = true;
         /** how fast the robot will move around corners. Recommended value 2-15. 0 means use horizontalDrift set in
@@ -118,7 +118,25 @@ struct MoveToPoseParams {
         float earlyExitRange = 0;
 };
 
-struct MoveToPointParams {
+struct MovePoseParams {
+        /** whether the robot should move forwards or backwards. True by default */
+        bool forwards = true;
+        /** nonlinear -> pid control cutoff */
+        float cutoff = 6;
+        /** linear kP */
+        float k1 = 3;
+        /** angular kP */
+        float k2 = 3;
+        /** ending orientation kP, 1 by default */
+        float k3 = 1;
+        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
+        float maxSpeed = 0;
+        /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
+         * less accurate but smoother ones. Value between 0-127. 0 by default */
+        float minSpeed = 0;
+};
+
+struct MovePointParams {
         /** whether the robot should move forwards or backwards. True by default */
         bool forwards = true;
         /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
@@ -153,12 +171,6 @@ class Chassis {
         Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
                 pros::Rotation* verticalTracker, pros::Rotation* horiTracker, ControllerSettings lateralSettings, 
                 ControllerSettings angularSettings);
-        
-        void setPose(float x, float y, float theta, bool radians = false);
-
-        void setPose(Pose pose, bool radians = false);
-
-        Pose getPose(bool radians = false, bool standardPos = false);
 
         void waitUntil(float dist);
 
@@ -176,15 +188,17 @@ class Chassis {
         void swingToPoint(float x, float y, DriveSide lockedSide, int timeout, SwingToPointParams params = {},
                           bool async = true);
 
-        void moveToPose(float x, float y, float theta, int timeout, MoveToPoseParams params = {}, bool async = true);
+        void boomerang(float x, float y, float theta, int timeout, BoomerangParams params = {}, bool async = true);
 
-        void moveToPoint(float x, float y, int timeout, MoveToPointParams params = {}, bool async = true);
+        void movePose(float x, float y, float theta, int timeout, MovePoseParams params = {}, bool async = true);
+
+        void movePoint(float x, float y, int timeout, MovePointParams params = {}, bool async = true);
 
         void moveDistance(float distance, int timeout, MoveDistanceParams params = {}, bool async = true);
 
         void moveTime(float time, float speed);
 
-        // void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
+        void pursuit(std::vector<Pose>& path, float lookahead, int timeout, bool forwards = true, bool async = true);
 
         void ramsete(Point p0, Point p1, Point p2, Point p3, int timeout);
 
@@ -221,7 +235,6 @@ class Chassis {
         float distTraveled = 0;
 
         ControllerSettings lateralSettings;
-        ControllerSettings goalSettings;
         ControllerSettings angularSettings;
 
         pros::MotorGroup* leftMotors;
