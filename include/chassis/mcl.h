@@ -12,8 +12,8 @@
 const float HALF = 72.0f;
 const float INF  = std::numeric_limits<float>::infinity();
 
-constexpr float hx   = 6;  // 12″
-constexpr float vy   = -1;    //  2″
+constexpr float hx   = 6;  // 6in from center
+constexpr float vy   = -1; // 1in forwards of center
 
 struct Particle {
     Point point;

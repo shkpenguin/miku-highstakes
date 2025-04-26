@@ -12,8 +12,12 @@ Drivetrain::Drivetrain(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMoto
                velocitySettings.trapezoidal),
       slew(velocitySettings.slew) {}
 
-void Drivetrain::setAuto(bool _enabled) {
-    enabled = _enabled;
+void Drivetrain::enableCorrection() {
+    enabled = true;
+}
+
+void Drivetrain::disableCorrection() {
+    enabled = false;
 }
 
 void Drivetrain::setGains(Gains gains) {
@@ -22,15 +26,13 @@ void Drivetrain::setGains(Gains gains) {
 }
 
 void Drivetrain::setLeftTarget(double vel) {
+    prevLeftTarget = leftTarget;
     leftTarget = vel;
-    leftVoltage = voltageLookup(vel);
-    leftPID.reset(); // only resets prevError and integral term
 }
 
 void Drivetrain::setRightTarget(double vel) {
+    prevRightTarget = rightTarget;
     rightTarget = vel;
-    rightVoltage = voltageLookup(vel);\
-    rightPID.reset();
 }
 
 void Drivetrain::setLeftVolts(double volts) {
@@ -51,10 +53,13 @@ void Chassis::updateVoltage() {
 
         drivetrain.leftPID.update(leftError);
         drivetrain.rightPID.update(rightError);
+
+        if(fabs(drivetrain.leftTarget - drivetrain.prevLeftTarget) > MAX_JERK) drivetrain.setLeftVolts(voltageLookup(drivetrain.leftTarget));
+        if(fabs(drivetrain.rightTarget - drivetrain.prevRightTarget) > MAX_JERK) drivetrain.setRightVolts(voltageLookup(drivetrain.rightTarget));
     }
 
     drivetrain.leftMotors->move_voltage(drivetrain.leftVoltage);
-    drivetrain.rightMotors->move_voltage(drivetrain.leftVoltage);
+    drivetrain.rightMotors->move_voltage(drivetrain.rightVoltage);
 }
 
 void Drivetrain::reset() {
@@ -64,11 +69,11 @@ void Drivetrain::reset() {
     rightTarget = 0;
     leftPID.reset();
     rightPID.reset();
-    setAuto(false);
+    // enabled = false;
 }
 
 double voltageLookup(double vel) {
-    // Lookup table: { voltage in millivolts, rpm }
+    // { voltage in millivolts, rpm }
     static const double table[29][2] = {
         {-12000, -640},
         {-11000, -590},

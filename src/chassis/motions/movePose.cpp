@@ -2,7 +2,7 @@
 #include "utils/math.h"
 #include "utils/utils.h"
 #include "robot-config.h"
-#include "chassis/tbh.h"
+#include "chassis/drivetrain.h"
 #include "utils/timer.h"
 #include "chassis/odom.h"
 
@@ -22,9 +22,7 @@ void Chassis::movePose(float x, float y, float theta, int timeout, MovePoseParam
     }
 
     Timer timer(timeout);
-    tbh.reset();
     theta = deg2rad(mod(90 - theta, 360.0f));
-    tbh.setStatus(true);
     bool first = true;
     std::uint32_t now = pros::millis();
     
@@ -56,33 +54,17 @@ void Chassis::movePose(float x, float y, float theta, int timeout, MovePoseParam
         float r_vel = v + TRACK_WIDTH * w / 2;
         float l_vel = v - TRACK_WIDTH * w / 2;
 
-        float m = std::max(std::abs(r_vel), std::abs(l_vel));
-        if (m > 100) {
-            r_vel *= 100 / m;
-            l_vel *= 100 / m;
-        }
-
         if (!params.forwards) {
-            tbh.setRightTarget(-1 * l_vel);
-            tbh.setRightTarget(-1 * r_vel);
-            if (first) {
-                tbh.setRightVolts(voltageLookup(-1 * l_vel));
-                tbh.setLeftVolts(voltageLookup(-1 * r_vel));
-                first = false;
-            }
+            drivetrain.setLeftTarget(-l_vel);
+            drivetrain.setRightTarget(-r_vel);
         } else {
-            tbh.setRightTarget(r_vel);
-            tbh.setLeftTarget(l_vel);
-            if (first) {
-                tbh.setRightVolts(voltageLookup(r_vel));
-                tbh.setLeftVolts(voltageLookup(l_vel));
-            }
+            drivetrain.setRightTarget(r_vel);
+            drivetrain.setLeftTarget(l_vel);
         }
         
         pros::delay(10);
     }
-
-    tbh.setStatus(false);
-
-    movePoint(x, y, timer.getTimeLeft(), MovePointParams{params.forwards, params.maxSpeed, params.minSpeed, }, false);
+    // stop the drivetrain
+    drivetrain.reset();
+    this->endMotion();
 }

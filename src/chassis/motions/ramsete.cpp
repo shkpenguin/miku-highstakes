@@ -26,9 +26,6 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
     int currentWaypoint = 0;
     int waypointCount = p.waypoints.size();
 
-    drivetrain.setAuto(true);
-    // Chassis::tbh.setGain(25.0);
-
     while(!timer.isDone() && this->motionRunning && (!lateralLargeExit.getExit() && !lateralSmallExit.getExit())) {
         Pose pose = getPose();
         double robot_x = pose.x;
@@ -88,16 +85,15 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double leftVel = v - w * (TRACK_WIDTH / 2.0);
         double rightVel = v + w * (TRACK_WIDTH / 2.0);
 
-        drivetrain.setLeftTarget(leftVel);
-        drivetrain.setRightTarget(rightVel);
+        drivetrain.setLeftTarget(vel2rpm(leftVel));
+        drivetrain.setRightTarget(vel2rpm(rightVel));
         drivetrain.update();
 
         pros::delay(dt);
     }
 
-    drivetrain.setAuto(false);
-    left_dt.move_velocity(0);
-    right_dt.move_velocity(0);
+    drivetrain.reset();
+    distTraveled = -1;
+    this->endMotion();
     
-    this->motionRunning = false;
 }

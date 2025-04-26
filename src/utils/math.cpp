@@ -13,12 +13,20 @@ float ema(float newValue, float oldValue, float alpha) {
     return (alpha * newValue) + ((1 - alpha) * oldValue);
 }
 
-float rot2inch(float circumference, float rotations) {
-    return (circumference * rotations);
+float rot2inch(float rotations, float diameter) {
+    return (diameter * M_PI * rotations) / 360;
 }
 
-float deg2inch(float circumference, float deg) {
-    return (circumference * deg) / 360;
+float deg2inch(float deg, float diameter) {
+    return (diameter * M_PI * deg) / 360;
+}
+
+float vel2rpm(float vel, float diameter) {
+    return (vel * 60) / (diameter * M_PI);
+}
+
+float rpm2vel(float rpm, float diameter) {
+    return (diameter * M_PI * rpm) / 60;
 }
 
 float dist(float x1, float y1, float x2, float y2) {

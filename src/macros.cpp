@@ -205,6 +205,12 @@ void driveControl() {
     }
 }
 
+// engage pto, wait
+// repeat(3):
+//     move lb and dt until lb goes down to -3deg or 4 seconds passed
+//     disable hang piston
+//     spin lb to hang position while slowly spinning dt forwards
+//     enable hang piston
 void t3() {
 
     pto.set_value(true);
@@ -213,13 +219,6 @@ void t3() {
     hanging = true;
     currState = RAISED;
 
-    /*
-    * pass requirements:
-    * 1. lb has reached 5 degrees
-    * 2. motor efficiency is less than 5%(needs to be small)
-    * 3. 3-4 seconds have passed
-    */
-    // drive backwards while pushing down lb motor slowly(torquemaxxing)
     Timer timer(4000);
 
     while(sanitizeAngle(lb.get_position()) > -300) {

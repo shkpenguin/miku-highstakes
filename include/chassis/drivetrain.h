@@ -8,16 +8,20 @@
 #include "pros/motors.hpp"
 #include "api.h"
 
+// ts pmo
 class Drivetrain {
 public:
     Drivetrain();
     Drivetrain(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors, ControllerSettings velocitySettings);
 
-    // Enable or disable auto voltage control
-    void setAuto(bool _enabled);
+    // enable or disable auto voltage control
+    void enableCorrection();
+    void disableCorrection();
     
     void setGains(Gains gains);
     
+    double prevLeftTarget = 0; // allows for quick feedforward on high jerk
+    double prevRightTarget = 0; 
     void setLeftTarget(double vel);
     void setRightTarget(double vel);
     

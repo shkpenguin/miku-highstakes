@@ -10,6 +10,7 @@
 #include "pros/misc.hpp"
 
 void Chassis::movePoint(float x, float y, int timeout, MovePointParams params, bool async) {
+    bool first = true;
     params.earlyExitRange = fabs(params.earlyExitRange);
     this->requestMotionStart();
     // were all motions cancelled?
@@ -108,25 +109,23 @@ void Chassis::movePoint(float x, float y, int timeout, MovePointParams params, b
         prevLateralOut = lateralOut;
 
         // ratio the speeds to respect the max speed
-        float leftPower = lateralOut + angularOut;
-        float rightPower = lateralOut - angularOut;
-        const float ratio = std::max(std::fabs(leftPower), std::fabs(rightPower)) / params.maxSpeed;
+        float leftVel = lateralOut + angularOut;
+        float rightVel = lateralOut - angularOut;
+        const float ratio = std::max(std::fabs(leftVel), std::fabs(rightVel)) / params.maxSpeed;
         if (ratio > 1) {
-            leftPower /= ratio;
-            rightPower /= ratio;
+            leftVel /= ratio;
+            rightVel /= ratio;
         }
 
-        // move the drivetrain
-        this->leftMotors->move(leftPower);
-        this->rightMotors->move(rightPower);
+        drivetrain.setLeftTarget(vel2rpm(leftVel));
+        drivetrain.setRightTarget(vel2rpm(rightVel));
 
         // delay to save resources
         pros::delay(10);
     }
 
-    // stop the drivetrain
-    this->leftMotors->move(0);
-    this->rightMotors->move(0);
+    // meow
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

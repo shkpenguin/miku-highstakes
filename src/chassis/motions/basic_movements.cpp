@@ -33,7 +33,6 @@ void Chassis::moveDistance(float distance, int timeout, MoveDistanceParams param
     float prevLateralOut = 0;
     Timer timer(timeout);
     bool close = false;
-    drivetrain.setAuto(true);
 
     while (!timer.isDone() &&
            ((!lateralSmallExit.getExit() && !lateralLargeExit.getExit()) || !close) &&
@@ -75,7 +74,6 @@ void Chassis::moveDistance(float distance, int timeout, MoveDistanceParams param
         if (fabs(remaining) < params.earlyExitRange) break;
     }
 
-    drivetrain.setAuto(false);
     drivetrain.reset();
     distTraveled = -1;
     this->endMotion();
@@ -90,7 +88,6 @@ void Chassis::moveTime(float time, float speed) {
 
     pros::delay(time);
 
-    drivetrain.setAuto(false);
     drivetrain.reset();
     this->endMotion();
 }
@@ -244,15 +241,14 @@ void Chassis::turnToPoint(float x, float y, int timeout, TurnToPointParams param
         prevMotorPower = motorPower;
 
         // move the drivetrain
-        this->leftMotors->move(motorPower);
-        this->rightMotors->move(-motorPower);
-
+        drivetrain.setLeftTarget(motorPower);
+        drivetrain.setRightTarget(-motorPower);
+        
         pros::delay(10);
     }
 
     // stop the drivetrain
-    this->leftMotors->move(0);
-    this->rightMotors->move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

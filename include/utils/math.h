@@ -46,13 +46,22 @@ float rad2deg(float rad);
 
 float deg2rad(float deg);
 
+// alpha is weight of new value
 float ema(float newValue, float oldValue, float alpha);
 
 Pose smoothPose(const Pose& newPose, const Pose& oldPose, float alpha);
 
-float rot2inch(float circumference, float rot);
+// uses drivetrain wheel diameter by default
+float rot2inch(float rotations, float diameter = DT_WHEEL_DIAMETER);
 
-float deg2inch(float circumference, float deg);
+// uses drivetrain wheel diameter by default
+float deg2inch(float deg, float diameter = DT_WHEEL_DIAMETER);
+
+// vel is in inches per second
+float vel2rpm(float vel, float diameter = DT_WHEEL_DIAMETER);
+
+// vel is in inches per second
+float rpm2vel(float rpm, float diameter = DT_WHEEL_DIAMETER);
 
 float dist(float x1, float y1, float x2, float y2);
 

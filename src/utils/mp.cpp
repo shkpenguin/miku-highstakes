@@ -54,47 +54,57 @@ float getBezierCurvature(Point p0, Point p1, Point p2, Point p3, float t) {
 // }
 
 void BezierCurve::generateWaypoints() {
+    // Robot physical constants
+    constexpr double max_rpm = 200;              // motor free speed (example)
+    constexpr double gear_ratio = 1.0;            // gearbox ratio (adjust if you have one)
+    constexpr double wheel_circumference = 4.0 * M_PI; // 4" diameter wheels
 
     // Number of waypoints to generate
     double currentTime = 0;
     float prevX = p0.x;
     float prevY = p0.y;
 
-    // Loop through the control points in sets of 4 (for cubic Bézier interpolation)
     double segmentLength = bezierLength(p0, p1, p2, p3);
-    int numWaypoints = segmentLength / 0.5;
+    int numWaypoints = std::max(2, static_cast<int>(segmentLength / 0.5)); // minimum 2 waypoints
 
     waypoints.clear();
     waypoints.reserve(numWaypoints);
 
-    // Generate waypoints for this segment
     for (int i = 0; i <= numWaypoints; ++i) {
-        // Interpolate the current position at parameter t
         float t = (float)i / numWaypoints;
         Point currentPoint = getPoint(p0, p1, p2, p3, t);
 
-        // Calculate derivatives (velocity and acceleration)
         Point velocity = getDerivative(p0, p1, p2, p3, t);
         Point acceleration = getSecondDerivative(p0, p1, p2, p3, t);
 
-        // Calculate curvature (how much the path is turning)
+        float rawVelocityMag = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+
+        // Estimate a "desired" velocity: interpolate between start and end (you could use a real table here)
+        float targetLinVel = rawVelocityMag; // simple for now, could replace with interpolated value
+
+        // Scale raw velocity to inches/sec based on robot limits
+        double max_linear_speed = max_rpm / 60.0 * gear_ratio * wheel_circumference; // in/s
+        targetLinVel = std::fmin(targetLinVel, max_linear_speed);
+
+        // Calculate curvature and limit velocity if needed
         float curvature = getBezierCurvature(p0, p1, p2, p3, t);
+        if (std::abs(curvature) > 1e-5) {
+            double curvature_limit = std::sqrt(2.0 / std::abs(curvature)); // or use your robot's max lateral accel
+            targetLinVel = std::fmin(targetLinVel, curvature_limit);
+        }
 
-        // Linear velocity (simplified, could use specific logic based on your needs)
-        float linearVelocity = velocity.x * velocity.x + velocity.y * velocity.y;
-        linearVelocity = std::sqrt(linearVelocity); // Magnitude of velocity vector
-
-        // Angular velocity based on curvature
-        float angularVelocity = linearVelocity * curvature;
+        // Calculate angular velocity
+        float angularVelocity = targetLinVel * curvature;
 
         // Calculate theta (orientation)
         float theta = std::atan2(velocity.y, velocity.x);
 
-        // Compute time for this waypoint based on velocity
-        double deltaTime = dist(prevX, prevY, currentPoint.x, currentPoint.y) / linearVelocity;
-        currentTime += deltaTime * 1000; // Convert to milliseconds
+        // Protect against zero velocity when computing deltaTime
+        double safeLinVel = std::max(targetLinVel, 1e-5f);
+        double deltaTime = dist(prevX, prevY, currentPoint.x, currentPoint.y) / safeLinVel;
+        currentTime += deltaTime * 1000.0; // ms
 
-        // Create the Waypoint and fill it with data
+        // Fill Waypoint
         Waypoint wp;
         wp.x = currentPoint.x;
         wp.y = currentPoint.y;
@@ -103,14 +113,12 @@ void BezierCurve::generateWaypoints() {
         wp.ddx = acceleration.x;
         wp.ddy = acceleration.y;
         wp.theta = theta;
-        wp.linvel = linearVelocity;
+        wp.linvel = targetLinVel;
         wp.angvel = angularVelocity;
         wp.t = currentTime;
 
-        // Store the waypoint
         waypoints.push_back(wp);
 
-        // Update previous position
         prevX = currentPoint.x;
         prevY = currentPoint.y;
     }

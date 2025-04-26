@@ -33,7 +33,7 @@ void Chassis::swingToHeading(float theta, DriveSide lockedSide, int timeout, Swi
     angularLargeExit.reset();
     angularSmallExit.reset();
     angularPID.reset();
-    drivetrain.setAuto(true);
+    bool first = true;
     // get original braking mode of that side of the drivetrain so we can set it back to it after this motion ends
     pros::MotorBrake brakeMode = (lockedSide == DriveSide::LEFT)
                                      ? drivetrain.leftMotors->get_brake_mode_all().at(0)
@@ -132,11 +132,6 @@ void Chassis::swingToPoint(float x, float y, DriveSide lockedSide, int timeout, 
     angularLargeExit.reset();
     angularSmallExit.reset();
     angularPID.reset();
-    drivetrain.setAuto(true);
-    // get original braking mode of that side of the drivetrain so we can set it back to it after this motion ends
-    pros::MotorBrake brakeMode = (lockedSide == DriveSide::LEFT)
-                                     ? drivetrain.leftMotors->get_brake_mode_all().at(0)
-                                     : drivetrain.rightMotors->get_brake_mode_all().at(0);
     // set brake mode of the locked side to hold
     if (lockedSide == DriveSide::LEFT) drivetrain.leftMotors->set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
     else drivetrain.rightMotors->set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
@@ -196,8 +191,8 @@ void Chassis::swingToPoint(float x, float y, DriveSide lockedSide, int timeout, 
 
     // set the brake mode of the locked side of the drivetrain to its
     // original value
-    if (lockedSide == DriveSide::LEFT) drivetrain.leftMotors->set_brake_mode_all(brakeMode);
-    else drivetrain.rightMotors->set_brake_mode_all(brakeMode);
+    if (lockedSide == DriveSide::LEFT) drivetrain.leftMotors->set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
+    else drivetrain.rightMotors->set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
     // stop the drivetrain
     drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
