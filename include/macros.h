@@ -47,4 +47,5 @@ extern int jamTimer;
 void intakeControl();
 void driveControl();
 
+extern bool hanging;
 void t3();

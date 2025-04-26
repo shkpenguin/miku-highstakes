@@ -21,28 +21,12 @@ pros::MotorGroup right_dt({8, 9, 10});
 pros::Optical optical(13);
 
 pros::Distance leftDist(11);
-pros::Distance rightDist(16);
+pros::Distance rightDist(15);
 
 pros::Rotation hori(-18);
 pros::Rotation vertical(17);
 
-// positional gain scheduling, made obsolete by PID velocity control
-/*
-std::vector<Gains> lateralGains = {
-    Gains(8, 0, 20), // no goal
-    Gains(8, 0, 20), // empty goal
-    Gains(8, 0, 20), // 1 ring
-    Gains(8, 0, 20), // 2 rings
-    Gains(8, 0, 20), // 3 rings
-    Gains(8, 0, 20), // 4 rings
-    Gains(8, 0, 20), // 5 rings
-    Gains(8, 0, 20), // 6 rings
-    Gains(8, 0, 20), // full goal
-};
-*/
-
-/*
-std::vector<Gains> angularGains = {
+std::vector<Gains> velocityGains = {
     Gains(4, 0.15, 24), // no goal
     Gains(4, 0.15, 24), // empty goal
     Gains(4, 0.15, 24), // 1 ring
@@ -53,10 +37,9 @@ std::vector<Gains> angularGains = {
     Gains(4, 0.15, 24), // 6 rings
     Gains(4, 0.15, 24) // full goal
 };
-*/
 
 ControllerSettings velocitySettings(
-    0.5, // proportional gain (kP)
+    10, // proportional gain (kP)
     0.0, // integral gain (kI)
     0.0, // derivative gain (kD)
     0.0, // anti windup

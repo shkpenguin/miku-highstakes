@@ -41,20 +41,20 @@ void Drivetrain::setRightVolts(double volts) {
     rightVoltage = volts;
 }
 
-void Drivetrain::update() {
-    if (!enabled) return;
+void Chassis::updateVoltage() {
+    if(drivetrain.enabled) {
+        double leftVel = avg(drivetrain.leftMotors->get_actual_velocity_all());
+        double rightVel  = avg(drivetrain.rightMotors->get_actual_velocity_all());
 
-    double leftVel = avg(leftMotors->get_actual_velocity_all());
-    double rightVel  = avg(rightMotors->get_actual_velocity_all());
+        double rightError = drivetrain.rightTarget - rightVel;
+        double leftError  = drivetrain.leftTarget  - leftVel;
 
-    double rightError = rightTarget - rightVel;
-    double leftError  = leftTarget  - leftVel;
+        drivetrain.leftPID.update(leftError);
+        drivetrain.rightPID.update(rightError);
+    }
 
-    leftPID.update(leftError);
-    rightPID.update(rightError);
-
-    left_dt.move_voltage(leftVoltage);
-    right_dt.move_voltage(rightVoltage);
+    drivetrain.leftMotors->move_voltage(drivetrain.leftVoltage);
+    drivetrain.rightMotors->move_voltage(drivetrain.leftVoltage);
 }
 
 void Drivetrain::reset() {
@@ -64,6 +64,7 @@ void Drivetrain::reset() {
     rightTarget = 0;
     leftPID.reset();
     rightPID.reset();
+    setAuto(false);
 }
 
 double voltageLookup(double vel) {

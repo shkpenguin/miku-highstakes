@@ -8,41 +8,7 @@
 #include "api.h"
 #include "utils/math.h"
 #include "utils/utils.h"
-#include "drivetrain.h"
-
-/** 
- * @param trapezoidal whether the integral is calculated with a trapezoidal riemann sum. false by default
- */
-class ControllerSettings {
-    public:
-        ControllerSettings() 
-            : kP(0), kI(0), kD(0), windupRange(0), smallError(0), smallErrorTimeout(0),
-              largeError(0), largeErrorTimeout(0), slew(0), trapezoidal(0) {}
-
-        ControllerSettings(float kP, float kI, float kD, float windupRange, float smallError, float smallErrorTimeout,
-                           float largeError, float largeErrorTimeout, float slew, bool trapezoidal)
-            : kP(kP),
-              kI(kI),
-              kD(kD),
-              windupRange(windupRange),
-              smallError(smallError),
-              smallErrorTimeout(smallErrorTimeout),
-              largeError(largeError),
-              largeErrorTimeout(largeErrorTimeout),
-              slew(slew),
-              trapezoidal(trapezoidal) {}
-
-        float kP;
-        float kI;
-        float kD;
-        float windupRange;
-        float smallError;
-        float smallErrorTimeout;
-        float largeError;
-        float largeErrorTimeout;
-        float slew;
-        bool trapezoidal;
-};
+#include "chassis/drivetrain.h" // Ensure this file defines the Drivetrain type
 
 struct TurnToPointParams {
         /** whether the robot should turn to face the point with the front of the robot. True by default */
@@ -173,8 +139,8 @@ class Chassis {
 
         //chassis constructor:
 
-        Chassis(Drivetrain drivetrain,
-                pros::Rotation* verticalTracker, pros::Rotation* horiTracker, ControllerSettings lateralSettings, 
+        Chassis(Drivetrain drivetrain, pros::Rotation* verticalTracker, pros::Rotation* horiTracker, 
+                ControllerSettings lateralSettings,
                 ControllerSettings angularSettings);
 
         void waitUntil(float dist);
@@ -221,9 +187,22 @@ class Chassis {
 
         void resetLocalPosition();
 
+        void setExits(ExitCondition lateralLargeExit,
+        ExitCondition lateralSmallExit,
+        ExitCondition angularLargeExit,
+        ExitCondition angularSmallExit);
+
+        double getTracker(pros::Rotation* tracker);
+
         PID lateralPID;
 
         PID angularPID;
+
+        Drivetrain drivetrain;
+
+        void updateVoltage();
+
+        double get_velocity(pros::MotorGroup* motors);
 
     protected:
 
@@ -240,8 +219,6 @@ class Chassis {
 
         ControllerSettings lateralSettings;
         ControllerSettings angularSettings;
-
-        Drivetrain drivetrain;
 
         pros::Rotation* verticalTracker;
         pros::Rotation* horiTracker;

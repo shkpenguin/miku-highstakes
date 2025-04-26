@@ -5,34 +5,14 @@
 #include "utils/utils.h"
 #include "chassis/odom.h"
 
-void calibrateIMU() {
-    int attempt = 1;
-    while (attempt <= 3) {
-        imu.reset();
-        while(imu.is_calibrating()) {
-            pros::delay(10);
-            if(imu.get_status() == pros::ImuStatus::error) {
-                master.rumble("---");
-                error_msg = "imu is fucked";
-                break;
-            }
-        }
-        if(imu.get_status() == pros::ImuStatus::ready) {
-            master.rumble(".");
-            break;
-        }
-        attempt++;
-    }
-    if (attempt > 3) {
-        error_msg = "kill yourself";
-    }
+double Chassis::getTracker(pros::Rotation* tracker) {
+    return tracker->get_position();
 }
 
-Chassis::Chassis(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors,
+Chassis::Chassis(Drivetrain drivetrain,
                  pros::Rotation* verticalTracker, pros::Rotation* horiTracker,
                  ControllerSettings lateralSettings, ControllerSettings angularSettings) :
-    leftMotors(leftMotors),
-    rightMotors(rightMotors),
+    drivetrain(drivetrain),
     verticalTracker(verticalTracker),
     horiTracker(horiTracker),
     lateralPID(lateralSettings.kP, lateralSettings.kI, lateralSettings.kD, lateralSettings.windupRange, true),
@@ -51,6 +31,10 @@ void Chassis::waitUntil(float dist) {
 void Chassis::waitUntilDone() {
     do pros::delay(10);
     while (distTraveled != -1);
+}
+
+double Chassis::get_velocity(pros::MotorGroup* motors) {
+    return avg(motors->get_actual_velocity_all());
 }
 
 void Chassis::requestMotionStart() {
@@ -121,7 +105,9 @@ void Chassis::arcade(int throttle, int turn, bool disableDriveCurve, float desat
     int rightPower = throttle - turn;
 
     // move drive
-    this->leftMotors->move(leftPower);
-    this->rightMotors->move(rightPower);
+    // drivetrain.setLeftVolts(leftPower);
+    // drivetrain.setRightVolts(rightPower);
+    left_dt.move(leftPower);
+    right_dt.move(rightPower);
 
 }

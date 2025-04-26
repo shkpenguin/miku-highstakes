@@ -10,6 +10,7 @@
 
 class Drivetrain {
 public:
+    Drivetrain();
     Drivetrain(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors, ControllerSettings velocitySettings);
 
     // Enable or disable auto voltage control
@@ -26,9 +27,12 @@ public:
     void update();
 
     void reset();
-protected:
+
+    // protected:
     pros::MotorGroup* leftMotors;
     pros::MotorGroup* rightMotors;
+
+    bool enabled = true;
 
     PID leftPID;
     PID rightPID;
@@ -40,8 +44,6 @@ protected:
 
     double leftVoltage = 0;
     double rightVoltage = 0;
-
-    bool enabled = false;
 };
 
 double voltageLookup(double vel);

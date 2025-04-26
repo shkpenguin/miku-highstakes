@@ -39,6 +39,10 @@ void lbControl() {
         }
 
         else if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
+            if(hanging) {
+                pros::delay(10);
+                continue;
+            }
             if(currState == HANG) t3();
             else {
                 currState = HANG;
@@ -155,14 +159,16 @@ void intakeControl() {
 
 }
 
-void setup() {
-    initOdom(Pose(0, 0, 0));
-    miku.turnToHeading(33, 10000);
-}
+// void setup() {
+//     initOdom(Pose(0, 0, 0));
+//     miku.turnToHeading(33, 10000);
+// }
 
 bool hanging = false;
 bool clampEnable = true;
 bool pisEnable = true;
+bool hangEnable = true;
+bool ptoEnable = true;
 
 void driveControl() {
     while (true) {
@@ -178,17 +184,22 @@ void driveControl() {
         }
 
         if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) && master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
-            setup();
+            // setup();
         }
 
         // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
         //     asmacro();
         // }
 
-        // if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
-        //     pistake.set_value(pisEnable);
-        //     pisEnable = !pisEnable;
-        // }
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
+            pto.set_value(ptoEnable);
+            ptoEnable = !ptoEnable;
+        }
+
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+            hang.set_value(hangEnable);
+            hangEnable = !hangEnable;
+        }
         
         pros::delay(10);
     }
@@ -209,30 +220,34 @@ void t3() {
     * 3. 3-4 seconds have passed
     */
     // drive backwards while pushing down lb motor slowly(torquemaxxing)
-    Timer timer(5000);
+    Timer timer(4000);
 
-    while(sanitizeAngle(lb.get_position()) > -1500) {
+    while(sanitizeAngle(lb.get_position()) > -300) {
         if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A) || timer.isDone()) break;
         left_dt.move_voltage(-12000);
         right_dt.move_voltage(-12000);
         lb.move_voltage(-2000);
         pros::delay(10);
     }
+    timer.pause();
+    timer.reset();
     left_dt.move_voltage(0);
     right_dt.move_voltage(0);
     lb.move_voltage(0);
     master.rumble(".");
     hang.set_value(false);
 
+    target = HANG;
     // spin forwards, push lb motor up
-    float error = 6000 - lbRot.get_position();
-    ExitCondition pass(500, 250);
-
-    while(!pass.getExit()) {
-        left_dt.move_voltage(error * 1);
-        right_dt.move_voltage(error * 1);
+    while(fabs(target - lbRot.get_position()) > 500) {
+        if(lbRot.get_position() > 0) {
+            left_dt.move_voltage(2000);
+            right_dt.move_voltage(2000);
+        }
+        pros::delay(10);
     }
 
     // engage hang piston, push lb back a little
+    hang.set_value(true);
 
 }

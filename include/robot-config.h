@@ -4,6 +4,10 @@
 #include "api.h"
 #include "utils/mp.h"
 
+// velocity control
+
+#define MAX_RPM 600
+
 // odom settings
 
 #define TRACK_WIDTH 14.0
@@ -27,8 +31,6 @@
 #define K_V 1.0
 #define K_W 2.0
 #define MAX_VEL 450 * M_PI * 3.25 / 60
-
-extern std::string error_msg;
 
 extern pros::MotorGroup left_dt;
 extern pros::MotorGroup right_dt;

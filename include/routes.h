@@ -6,6 +6,8 @@
 extern std::vector<Auton> redAutons;
 extern std::vector<Auton> blueAutons;
 
+void test();
+
 void redRush();
 
 void blueRush();
