@@ -15,10 +15,10 @@ struct TurnToPointParams {
         bool forwards = true;
         /** the direction the robot should turn in. AUTO by default */
         AngularDirection direction = AngularDirection::AUTO;
-        /** the maximum speed the robot can turn at. Value between 0-127. 127 by default */
-        int maxSpeed = 127;
+        /** the maximum speed the robot can turn at. Value between 0-100. 100 by default */
+        int maxSpeed = 100;
         /** the minimum speed the robot can turn at. If set to a non-zero value, the `it conditions will switch to less
-         * accurate but smoother ones. Value between 0-127. 0 by default */
+         * accurate but smoother ones. Value between 0-100. 0 by default */
         int minSpeed = 0;
         /** angle between the robot and target point where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -28,10 +28,10 @@ struct TurnToPointParams {
 struct TurnToHeadingParams {
         /** the direction the robot should turn in. AUTO by default */
         AngularDirection direction = AngularDirection::AUTO;
-        /** the maximum speed the robot can turn at. Value between 0-127. 127 by default */
-        int maxSpeed = 127;
+        /** the maximum speed the robot can turn at. Value between 0-100. 100 by default */
+        int maxSpeed = 100;
         /** the minimum speed the robot can turn at. If set to a non-zero value, the `it conditions will switch to less
-         * accurate but smoother ones. Value between 0-127. 0 by default */
+         * accurate but smoother ones. Value between 0-100. 0 by default */
         int minSpeed = 0;
         /** angle between the robot and target point where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -48,10 +48,10 @@ struct SwingToPointParams {
         bool forwards = true;
         /** the direction the robot should turn in. AUTO by default */
         AngularDirection direction = AngularDirection::AUTO;
-        /** the maximum speed the robot can turn at. Value between 0-127. 127 by default */
-        float maxSpeed = 127;
+        /** the maximum speed the robot can turn at. Value between 0-100. 100 by default */
+        float maxSpeed = 100;
         /** the minimum speed the robot can turn at. If set to a non-zero value, the exit conditions will switch to less
-         * accurate but smoother ones. Value between 0-127. 0 by default */
+         * accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
         /** angle between the robot and target heading where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -61,10 +61,10 @@ struct SwingToPointParams {
 struct SwingToHeadingParams {
         /** the direction the robot should turn in. AUTO by default */
         AngularDirection direction = AngularDirection::AUTO;
-        /** the maximum speed the robot can turn at. Value between 0-127. 127 by default */
-        float maxSpeed = 127;
+        /** the maximum speed the robot can turn at. Value between 0-100. 100 by default */
+        float maxSpeed = 100;
         /** the minimum speed the robot can turn at. If set to a non-zero value, the exit conditions will switch to less
-         * accurate but smoother ones. Value between 0-127. 0 by default */
+         * accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
         /** angle between the robot and target heading where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -79,10 +79,10 @@ struct BoomerangParams {
         float horizontalDrift = 0;
         /** carrot point multiplier. value between 0 and 1. Higher values result in curvier movements. 0.6 by default */
         float lead = 0.6;
-        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
-        float maxSpeed = 127;
+        /** the maximum speed the robot can travel at. Value between 0-100. 100 by default */
+        float maxSpeed = 100;
         /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
-         * less accurate but smoother ones. Value between 0-127. 0 by default */
+         * less accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
         /** distance between the robot and target point where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -100,20 +100,20 @@ struct MovePoseParams {
         float k2 = 3;
         /** ending orientation kP, 1 by default */
         float k3 = 1;
-        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
+        /** the maximum speed the robot can travel at. Value between 0-100. 100 by default */
         float maxSpeed = 0;
         /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
-         * less accurate but smoother ones. Value between 0-127. 0 by default */
+         * less accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
 };
 
 struct MovePointParams {
         /** whether the robot should move forwards or backwards. True by default */
         bool forwards = true;
-        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
-        float maxSpeed = 127;
+        /** the maximum speed the robot can travel at. Value between 0-100. 100 by default */
+        float maxSpeed = 100;
         /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
-         * less accurate but smoother ones. Value between 0-127. 0 by default */
+         * less accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
         /** distance between the robot and target point where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -121,10 +121,10 @@ struct MovePointParams {
 };
 
 struct MoveDistanceParams {
-        /** the maximum speed the robot can travel at. Value between 0-127. 127 by default */
-        float maxSpeed = 127;
+        /** the maximum speed the robot can travel at. Value between 0-100. 100 by default */
+        float maxSpeed = 100;
         /** the minimum speed the robot can travel at. If set to a non-zero value, the exit conditions will switch to
-         * less accurate but smoother ones. Value between 0-127. 0 by default */
+         * less accurate but smoother ones. Value between 0-100. 0 by default */
         float minSpeed = 0;
         /** distance between the robot and target point where the movement will exit. Only has an effect if minSpeed is
          * non-zero.*/
@@ -164,6 +164,8 @@ class Chassis {
         void movePose(float x, float y, float theta, int timeout, MovePoseParams params = {}, bool async = true);
 
         void movePoint(float x, float y, int timeout, MovePointParams params = {}, bool async = true);
+
+        void moveDistanceRaw(float distance, int timeout, MoveDistanceParams params = {}, bool async = true);
 
         void moveDistance(float distance, int timeout, MoveDistanceParams params = {}, bool async = true);
 

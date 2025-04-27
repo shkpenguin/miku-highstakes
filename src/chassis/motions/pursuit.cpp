@@ -159,6 +159,8 @@ void Chassis::pursuit(std::vector<Pose>& path, float lookahead, int timeout, boo
     int compState = pros::competition::get_status();
     distTraveled = 0;
 
+    enableCorrection();
+
     // loop until the robot is within the end tolerance
     for (int i = 0; i < timeout / 10 && pros::competition::get_status() == compState && this->motionRunning; i++) {
         // get the current position of the robot
@@ -204,19 +206,19 @@ void Chassis::pursuit(std::vector<Pose>& path, float lookahead, int timeout, boo
 
         // move the drivetrain
         if (forwards) {
-            drivetrain.leftMotors->move(targetLeftVel);
-            drivetrain.rightMotors->move(targetRightVel);
+            drivetrain.setLeftTarget(vel2rpm(targetLeftVel));
+            drivetrain.setRightTarget(vel2rpm(targetRightVel));
         } else {
-            drivetrain.leftMotors->move(-targetRightVel);
-            drivetrain.rightMotors->move(-targetLeftVel);
+            drivetrain.setRightTarget(-vel2rpm(targetLeftVel));
+            drivetrain.setLeftTarget(-vel2rpm(targetRightVel));
         }
 
         pros::delay(10);
     }
 
     // stop the robot
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
+    drivetrain.reset();
+    disableCorrection();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     // give the mutex back

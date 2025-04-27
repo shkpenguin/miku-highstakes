@@ -39,3 +39,5 @@ bool sensorUpdate(const std::vector<float>& actual);
 Point getEstimate();
 void injectAroundEstimate(float essThresholdRatio = 0.5f,
                           float transSigma = 1.0f);
+
+void updateMCL();

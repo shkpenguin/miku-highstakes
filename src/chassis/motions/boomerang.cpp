@@ -45,7 +45,6 @@ void Chassis::boomerang(float x, float y, float theta, int timeout, BoomerangPar
     bool prevSameSide = false;
     float prevLateralOut = 0; // previous lateral power
     float prevAngularOut = 0; // previous angular power
-    const int compState = pros::competition::get_status();
 
     // main loop
     while (!timer.isDone() &&
@@ -154,8 +153,8 @@ void Chassis::boomerang(float x, float y, float theta, int timeout, BoomerangPar
         }
 
         // move the drivetrain
-        drivetrain.leftMotors->move(leftPower);
-        drivetrain.rightMotors->move(rightPower);
+        drivetrain.setLeftVolts(leftPower * 120);
+        drivetrain.setRightVolts(rightPower * 120);
 
         // delay to save resources
         pros::delay(10);

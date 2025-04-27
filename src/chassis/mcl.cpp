@@ -289,3 +289,21 @@ void injectAroundEstimate(float essThresholdRatio, float sigma) {
         particles[bad].weight     = uniformW;
     }
 }
+
+void updateMCL() {
+    motionUpdate(Point(getSpeed().x, getSpeed().y));
+
+    std::vector<float> sensors = {
+        static_cast<float>(leftDist.get() / 25.4),
+        static_cast<float>(rightDist.get() / 25.4)
+    };
+
+    bool valid = sensorUpdate(sensors);
+
+    if (valid) {
+        Pose estPose(getEstimate().x, getEstimate().y, getPose(true).theta);
+        setPose(estPose, true);
+        resampleParticles();
+        injectAroundEstimate(0.5, 5.0);  // Only when we have good data
+    }
+}

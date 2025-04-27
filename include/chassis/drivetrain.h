@@ -32,7 +32,7 @@ public:
     pros::MotorGroup* leftMotors;
     pros::MotorGroup* rightMotors;
 
-    bool enabled = true;
+    bool enabled = false;
 
     PID leftPID;
     PID rightPID;

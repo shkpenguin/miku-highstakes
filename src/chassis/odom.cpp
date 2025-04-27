@@ -51,7 +51,7 @@ Pose getSpeed(bool radians) {
 //     return futurePose;
 // }
 
-void update() {
+void updateOdom() {
     float hori_raw = deg2inch(hori.get_position() / 100, TRACKING_WHEEL_DIAMETER);
     float vert_raw = deg2inch(vertical.get_position() / 100, TRACKING_WHEEL_DIAMETER);
     float imuRaw = deg2rad(imu.get_rotation());
@@ -96,30 +96,4 @@ void update() {
     odomPose.y += dPose.y;
     odomPose.theta = heading;
 
-}
-
-void initOdom(Pose start) {
-    setPose(start);
-    trackingTask = new pros::Task{[=] {
-	while (true) {
-		update();
-        motionUpdate(Point(getSpeed().x, getSpeed().y));
-
-        std::vector<float> sensors = {
-            static_cast<float>(leftDist.get() / 25.4),
-            static_cast<float>(rightDist.get() / 25.4)
-        };
-
-        bool valid = sensorUpdate(sensors);
-
-        if (valid) {
-            Pose estPose(getEstimate().x, getEstimate().y, getPose(true).theta);
-            setPose(estPose, true);
-            resampleParticles();
-            injectAroundEstimate(0.5, 5.0);  // Only when we have good data
-        }
-
-		pros::delay(10);
-	}
-}};
 }

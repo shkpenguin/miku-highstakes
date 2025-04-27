@@ -38,9 +38,4 @@ Pose estimatePose(float time, bool radians = false);
  * @brief Update the pose of the robot
  *
  */
-void update();
-/**
- * @brief Initialize the odometry system
- *
- */
-void initOdom(Pose start);
+void updateOdom();

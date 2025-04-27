@@ -1,84 +1,10 @@
-#include <cmath>
 #include "chassis/chassis.h"
-#include "utils/timer.h"
+#include "chassis/drivetrain.h"
 #include "utils/utils.h"
-#include "pros/misc.hpp"
-#include "chassis/odom.h"
+#include "utils/math.h"
 #include "robot-config.h"
-
-void Chassis::moveDistance(float distance, int timeout, MoveDistanceParams params, bool async) {
-    params.earlyExitRange = fabs(params.earlyExitRange);
-    this->requestMotionStart();
-    if (!this->motionRunning) return;
-
-    if (async) {
-        float dist = distance;
-        MoveDistanceParams copyParams = params;
-        pros::Task task([this, dist, timeout, copyParams]() {
-            moveDistance(dist, timeout, copyParams, false);
-        });
-        this->endMotion();
-        pros::delay(10);
-        return;
-    }
-
-    lateralPID.reset();
-    lateralLargeExit.reset();
-    lateralSmallExit.reset();
-
-    const float sign = copysign(1.0f, distance);
-    const float initialAngle = vertical.get_angle();  // in ticks or degrees
-    float prevAngle = initialAngle;
-    float distTraveled = 0;
-    float prevLateralOut = 0;
-    Timer timer(timeout);
-    bool close = false;
-
-    while (!timer.isDone() &&
-           ((!lateralSmallExit.getExit() && !lateralLargeExit.getExit()) || !close) &&
-           this->motionRunning) {
-        float angleNow = vertical.get_angle();
-        float deltaAngle = angleNow - prevAngle;
-        distTraveled += deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, deltaAngle);  // Use appropriate conversion
-        prevAngle = angleNow;
-
-        float remaining = distance - distTraveled;
-        pros::lcd::set_text(1, "Remaining: " + std::to_string(remaining));
-        pros::lcd::set_text(2, "Traveled: " + std::to_string(distTraveled));
-
-        if (fabs(remaining) < 7.5 && !close) {
-            close = true;
-            params.maxSpeed = std::max(std::fabs(prevLateralOut), 60.0f);
-        }
-
-        lateralSmallExit.update(remaining);
-        lateralLargeExit.update(remaining);
-
-        float lateralOut = lateralPID.update(remaining);
-        lateralOut = std::clamp(lateralOut, -params.maxSpeed, params.maxSpeed);
-        if (!close) lateralOut = slew(lateralOut, prevLateralOut, lateralSettings.slew);
-
-        if (sign > 0 && lateralOut < fabs(params.minSpeed) && lateralOut > 0)
-            lateralOut = fabs(params.minSpeed);
-        if (sign < 0 && lateralOut > -fabs(params.minSpeed) && lateralOut < 0)
-            lateralOut = -fabs(params.minSpeed);
-        if (!close && lateralOut * sign < 0)
-            lateralOut = 0;
-
-        prevLateralOut = lateralOut;
-
-        drivetrain.leftMotors->move(lateralOut);
-        drivetrain.rightMotors->move(lateralOut);
-
-        pros::delay(10);
-        if (fabs(remaining) < params.earlyExitRange) break;
-    }
-
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
-    distTraveled = -1;
-    this->endMotion();
-}
+#include "utils/timer.h"
+#include "chassis/odom.h"
 
 void Chassis::moveTime(float time, float speed) {
     this->requestMotionStart();

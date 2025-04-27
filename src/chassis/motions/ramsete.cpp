@@ -5,8 +5,8 @@
 #include "robot-config.h"
 #include "chassis/drivetrain.h"
 
-double kV = 100.0;
-double kW = 50.0;
+double kV = 1.0;
+double kW = 1.0;
 double zeta = 0.7;
 double b = 2.0;
 double dt = 10; // ms
@@ -53,6 +53,8 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
         Waypoint wp = p.waypoints[currentWaypoint];
 
+        // print to controller
+
         double xt = wp.x;
         double yt = wp.y;
         double thetat = wp.theta;
@@ -85,8 +87,6 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
         drivetrain.setLeftTarget(vel2rpm(leftVel));
         drivetrain.setRightTarget(vel2rpm(rightVel));
-
-        updateVoltage();
 
         pros::delay(10);
     }
