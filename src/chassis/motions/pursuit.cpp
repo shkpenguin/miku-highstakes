@@ -204,18 +204,19 @@ void Chassis::pursuit(std::vector<Pose>& path, float lookahead, int timeout, boo
 
         // move the drivetrain
         if (forwards) {
-            drivetrain.setLeftTarget(targetLeftVel);
-            drivetrain.setRightTarget(targetRightVel);
+            drivetrain.leftMotors->move(targetLeftVel);
+            drivetrain.rightMotors->move(targetRightVel);
         } else {
-            drivetrain.setLeftTarget(-targetRightVel);
-            drivetrain.setRightTarget(-targetLeftVel);
+            drivetrain.leftMotors->move(-targetRightVel);
+            drivetrain.rightMotors->move(-targetLeftVel);
         }
 
         pros::delay(10);
     }
 
     // stop the robot
-    drivetrain.reset();
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     // give the mutex back

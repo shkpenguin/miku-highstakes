@@ -6,7 +6,7 @@
 // velocity control
 
 #define MAX_RPM 640
-#define MAX_JERK 100.0
+#define MAX_JERK 50.0
 
 // odom settings
 

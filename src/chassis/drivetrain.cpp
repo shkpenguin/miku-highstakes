@@ -12,16 +12,16 @@ Drivetrain::Drivetrain(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMoto
                velocitySettings.trapezoidal),
       slew(velocitySettings.slew) {}
 
-void Drivetrain::enableCorrection() {
-    enabled = true;
+void Chassis::enableCorrection() {
+    drivetrain.enabled = true;
 }
 
-void Drivetrain::disableCorrection() {
-    enabled = false;
+void Chassis::disableCorrection() {
+    drivetrain.enabled = false;
 }
 
 void Drivetrain::setGains(Gains gains) {
-    leftPID.setGains(gains);
+    leftPID.setGains(gains); 
     rightPID.setGains(gains);
 }
 
@@ -44,18 +44,19 @@ void Drivetrain::setRightVolts(double volts) {
 }
 
 void Chassis::updateVoltage() {
-    if(drivetrain.enabled) {
+    if (drivetrain.enabled) {
         double leftVel = avg(drivetrain.leftMotors->get_actual_velocity_all());
-        double rightVel  = avg(drivetrain.rightMotors->get_actual_velocity_all());
+        double rightVel = avg(drivetrain.rightMotors->get_actual_velocity_all());
 
+        double leftError = drivetrain.leftTarget - leftVel;
         double rightError = drivetrain.rightTarget - rightVel;
-        double leftError  = drivetrain.leftTarget  - leftVel;
 
-        drivetrain.leftPID.update(leftError);
-        drivetrain.rightPID.update(rightError);
+        double leftPIDOut = drivetrain.leftPID.update(leftError);
+        double rightPIDOut = drivetrain.rightPID.update(rightError);
 
-        if(fabs(drivetrain.leftTarget - drivetrain.prevLeftTarget) > MAX_JERK) drivetrain.setLeftVolts(voltageLookup(drivetrain.leftTarget));
-        if(fabs(drivetrain.rightTarget - drivetrain.prevRightTarget) > MAX_JERK) drivetrain.setRightVolts(voltageLookup(drivetrain.rightTarget));
+        // Use the PID output alone to control speed, feedforward shouldn't be added unless for certain purposes
+        drivetrain.leftVoltage = leftPIDOut;
+        drivetrain.rightVoltage = rightPIDOut;
     }
 
     drivetrain.leftMotors->move_voltage(drivetrain.leftVoltage);

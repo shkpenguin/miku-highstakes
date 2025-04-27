@@ -20,8 +20,8 @@ std::vector<Auton> blueAutons = {
 };
 
 void test() {
-    miku.drivetrain.setLeftTarget(300);
-    miku.drivetrain.setRightTarget(300);
+    miku.ramsete(Point(48, -48), Point(48, -24), Point(24, -24), Point(24, -48), 4000);
+    miku.waitUntilDone();
 }
 
 void redRush() {

@@ -13,10 +13,6 @@ class Drivetrain {
 public:
     Drivetrain();
     Drivetrain(pros::MotorGroup* leftMotors, pros::MotorGroup* rightMotors, ControllerSettings velocitySettings);
-
-    // enable or disable auto voltage control
-    void enableCorrection();
-    void disableCorrection();
     
     void setGains(Gains gains);
     

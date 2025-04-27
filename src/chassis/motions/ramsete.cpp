@@ -3,9 +3,10 @@
 #include "utils/timer.h"
 #include "chassis/odom.h"
 #include "robot-config.h"
+#include "chassis/drivetrain.h"
 
-double kV = 1.0;
-double kW = 2.0;
+double kV = 100.0;
+double kW = 50.0;
 double zeta = 0.7;
 double b = 2.0;
 double dt = 10; // ms
@@ -25,6 +26,8 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
     p.generateWaypoints();
     int currentWaypoint = 0;
     int waypointCount = p.waypoints.size();
+
+    enableCorrection();
 
     while(!timer.isDone() && this->motionRunning && (!lateralLargeExit.getExit() && !lateralSmallExit.getExit())) {
         Pose pose = getPose();
@@ -48,17 +51,14 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
 
         currentWaypoint = closest;
 
-        // --- Pull target waypoint ---
         Waypoint wp = p.waypoints[currentWaypoint];
 
-        // Target pose
         double xt = wp.x;
         double yt = wp.y;
         double thetat = wp.theta;
         double vt = wp.linvel * kV;
         double wt = wp.angvel * kW;
-
-        // Error in robot frame
+    
         double dx = xt - robot_x;
         double dy = yt - robot_y;
 
@@ -69,7 +69,6 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double error_y = -sinTheta * dx + cosTheta * dy;
         double error_theta = std::atan2(std::sin(thetat - robot_theta), std::cos(thetat - robot_theta));
 
-        // RAMSETE controller
         double k = 2 * zeta * std::sqrt(wt * wt + b * vt * vt);
         double u1 = -k * error_x;
         double u2 = -b * vt * error_y - k * error_theta;
@@ -81,17 +80,18 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double v = vt * std::cos(error_theta) - u1;
         double w = wt - u2;
 
-        // Convert to wheel speeds
         double leftVel = v - w * (TRACK_WIDTH / 2.0);
         double rightVel = v + w * (TRACK_WIDTH / 2.0);
 
         drivetrain.setLeftTarget(vel2rpm(leftVel));
         drivetrain.setRightTarget(vel2rpm(rightVel));
-        drivetrain.update();
 
-        pros::delay(dt);
+        updateVoltage();
+
+        pros::delay(10);
     }
 
+    disableCorrection();
     drivetrain.reset();
     distTraveled = -1;
     this->endMotion();

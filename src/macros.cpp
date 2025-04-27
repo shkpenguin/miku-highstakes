@@ -64,7 +64,7 @@ void lbControl() {
  
         double error = target - lbRot.get_position();
         double derivative = error - previous_error;
-        lb.move_voltage(error * 2 + derivative * 15);
+        lb.move_voltage(error * 2.5 + derivative * 15);
         previous_error = error;
 
         pros::delay(10);

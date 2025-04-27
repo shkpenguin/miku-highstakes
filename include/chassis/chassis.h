@@ -167,7 +167,7 @@ class Chassis {
 
         void moveDistance(float distance, int timeout, MoveDistanceParams params = {}, bool async = true);
 
-        void moveTime(float time, float speed);
+        void moveTime(float time, float speed = 100);
 
         void pursuit(std::vector<Pose>& path, float lookahead, int timeout, bool forwards = true, bool async = true);
 
@@ -182,6 +182,9 @@ class Chassis {
         void cancelMotion();
 
         void cancelAllMotions();
+
+        void enableCorrection();
+        void disableCorrection();       
 
         bool isInMotion() const;
 

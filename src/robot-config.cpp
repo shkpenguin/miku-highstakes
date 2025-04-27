@@ -39,7 +39,7 @@ std::vector<Gains> velocityGains = {
 };
 
 ControllerSettings velocitySettings(
-    10, // proportional gain (kP)
+    100, // proportional gain (kP)
     0.0, // integral gain (kI)
     0.0, // derivative gain (kD)
     0.0, // anti windup
@@ -51,9 +51,9 @@ ControllerSettings velocitySettings(
     true // trapezoidal riemann sum
 );
 
-ControllerSettings lateralSettings(8, // proportional gain (kP)
+ControllerSettings lateralSettings(2, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              20, // derivative gain (kD)
+                                              0, // derivative gain (kD)
                                               0, // anti windup
                                               0.5, // small error range, in inches
                                               100, // small error range timeout, in milliseconds

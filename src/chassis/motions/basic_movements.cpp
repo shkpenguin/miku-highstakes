@@ -67,14 +67,15 @@ void Chassis::moveDistance(float distance, int timeout, MoveDistanceParams param
 
         prevLateralOut = lateralOut;
 
-        drivetrain.setLeftTarget(lateralOut);
-        drivetrain.setRightTarget(lateralOut);
+        drivetrain.leftMotors->move(lateralOut);
+        drivetrain.rightMotors->move(lateralOut);
 
         pros::delay(10);
         if (fabs(remaining) < params.earlyExitRange) break;
     }
 
-    drivetrain.reset();
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
     distTraveled = -1;
     this->endMotion();
 }
@@ -83,17 +84,17 @@ void Chassis::moveTime(float time, float speed) {
     this->requestMotionStart();
     if (!this->motionRunning) return;
 
-    drivetrain.setLeftTarget(speed * MAX_RPM / 100);
-    drivetrain.setRightTarget(speed * MAX_RPM / 100);
+    drivetrain.leftMotors->move(speed);
+    drivetrain.rightMotors->move(speed);
 
     pros::delay(time);
 
-    drivetrain.reset();
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
     this->endMotion();
 }
 
 void Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params, bool async) {
-    params.maxSpeed = params.maxSpeed * MAX_RPM / 100;
     params.minSpeed = std::abs(params.minSpeed);
     this->requestMotionStart();
     // were all motions cancelled?
@@ -107,8 +108,8 @@ void Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params
     }
     float targetTheta;
     float deltaTheta;
-    float angularOutput;
-    float prevAngularOutput = 0;
+    float motorPower;
+    float prevMotorPower = 0;
     float startTheta = getPose().theta;
     bool settling = false;
     std::optional<float> prevRawDeltaTheta = std::nullopt;
@@ -146,27 +147,28 @@ void Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params
         if (params.minSpeed != 0 && sgn(deltaTheta) != sgn(prevDeltaTheta)) break;
 
         // calculate the speed
-        angularOutput = angularPID.update(deltaTheta);
+        motorPower = angularPID.update(deltaTheta);
         angularLargeExit.update(deltaTheta);
         angularSmallExit.update(deltaTheta);
 
         // cap the speed
-        if (angularOutput > params.maxSpeed) angularOutput = params.maxSpeed;
-        else if (angularOutput < -params.maxSpeed) angularOutput = -params.maxSpeed;
-        if (fabs(deltaTheta) > 20) angularOutput = slew(angularOutput, prevAngularOutput, angularSettings.slew);
-        if (angularOutput < 0 && angularOutput > -params.minSpeed) angularOutput = -params.minSpeed;
-        else if (angularOutput > 0 && angularOutput < params.minSpeed) angularOutput = params.minSpeed;
-        prevAngularOutput = angularOutput;
+        if (motorPower > params.maxSpeed) motorPower = params.maxSpeed;
+        else if (motorPower < -params.maxSpeed) motorPower = -params.maxSpeed;
+        if (fabs(deltaTheta) > 20) motorPower = slew(motorPower, prevMotorPower, angularSettings.slew);
+        if (motorPower < 0 && motorPower > -params.minSpeed) motorPower = -params.minSpeed;
+        else if (motorPower > 0 && motorPower < params.minSpeed) motorPower = params.minSpeed;
+        prevMotorPower = motorPower;
 
         // move the drivetrain
-        drivetrain.setLeftTarget(angularOutput);
-        drivetrain.setRightTarget(-angularOutput);
+        drivetrain.leftMotors->move(motorPower);
+        drivetrain.rightMotors->move(-motorPower);
 
         pros::delay(10);
     }
 
     // stop the drivetrain
-    drivetrain.reset();
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();
@@ -241,14 +243,15 @@ void Chassis::turnToPoint(float x, float y, int timeout, TurnToPointParams param
         prevMotorPower = motorPower;
 
         // move the drivetrain
-        drivetrain.setLeftTarget(motorPower);
-        drivetrain.setRightTarget(-motorPower);
-        
+        drivetrain.leftMotors->move(motorPower);
+        drivetrain.rightMotors->move(-motorPower);
+
         pros::delay(10);
     }
 
     // stop the drivetrain
-    drivetrain.reset();
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

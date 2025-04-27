@@ -28,6 +28,7 @@ class BezierCurve {
 
     public:
         BezierCurve() = default;
+        BezierCurve(Point path[4]) : p0(path[0]), p1(path[1]), p2(path[2]), p3(path[3]) {};
         BezierCurve(Point p0, Point p1, Point p2, Point p3) : p0(p0), p1(p1), p2(p2), p3(p3) {};
         BezierCurve(const BezierCurve& other) : waypoints(other.waypoints), p0(other.p0), p1(other.p1), p2(other.p2), p3(other.p3) {}
 

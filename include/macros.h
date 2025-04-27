@@ -5,7 +5,7 @@
 
 enum LBState {
     DOWN = 0,
-    READY = 3500,
+    READY = 3700,
     RAISED = -1,
     DESCORE = 16500,
     HANG = 10000

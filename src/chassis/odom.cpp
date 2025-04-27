@@ -52,8 +52,8 @@ Pose getSpeed(bool radians) {
 // }
 
 void update() {
-    float hori_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, hori.get_position() / 100);
-    float vert_raw = deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, vertical.get_position() / 100);
+    float hori_raw = deg2inch(hori.get_position() / 100, TRACKING_WHEEL_DIAMETER);
+    float vert_raw = deg2inch(vertical.get_position() / 100, TRACKING_WHEEL_DIAMETER);
     float imuRaw = deg2rad(imu.get_rotation());
     float d_heading = imuRaw - prev_imu;
 

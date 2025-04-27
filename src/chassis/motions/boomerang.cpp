@@ -154,8 +154,8 @@ void Chassis::boomerang(float x, float y, float theta, int timeout, BoomerangPar
         }
 
         // move the drivetrain
-        this->leftMotors->move(leftPower);
-        this->rightMotors->move(rightPower);
+        drivetrain.leftMotors->move(leftPower);
+        drivetrain.rightMotors->move(rightPower);
 
         // delay to save resources
         pros::delay(10);

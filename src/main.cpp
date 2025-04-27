@@ -22,7 +22,7 @@ void initialize()
 {
 
 	if(pros::competition::is_field_control()) initSelector();
-	else selectedAuton = Auton(RED, "Test", test, Pose(11, -52.5, 213));
+	else selectedAuton = Auton(RED, "Test", test, Pose(48, -48, 0));
 
 	display = 0;
 
@@ -57,14 +57,6 @@ void competition_initialize()
 
 void autonomous()
 {
-	pros::Task autoTask([&]
-	{
-		while (true)
-		{
-			miku.updateVoltage();
-			pros::delay(10);
-		}
-	});
 	sortColor = static_cast<Color>(-1 * (selectedAuton.color));
 	initOdom(selectedAuton.start);
 	initParticles();
@@ -73,6 +65,6 @@ void autonomous()
 
 void opcontrol()
 {
-	miku.drivetrain.setAuto(false);
+	miku.disableCorrection();
 	pros::Task userTask(driveControl);
 }

@@ -54,10 +54,6 @@ float getBezierCurvature(Point p0, Point p1, Point p2, Point p3, float t) {
 // }
 
 void BezierCurve::generateWaypoints() {
-    // Robot physical constants
-    constexpr double max_rpm = 200;              // motor free speed (example)
-    constexpr double gear_ratio = 1.0;            // gearbox ratio (adjust if you have one)
-    constexpr double wheel_circumference = 4.0 * M_PI; // 4" diameter wheels
 
     // Number of waypoints to generate
     double currentTime = 0;
@@ -65,7 +61,7 @@ void BezierCurve::generateWaypoints() {
     float prevY = p0.y;
 
     double segmentLength = bezierLength(p0, p1, p2, p3);
-    int numWaypoints = std::max(2, static_cast<int>(segmentLength / 0.5)); // minimum 2 waypoints
+    int numWaypoints = std::max(2, static_cast<int>(segmentLength / 0.3)); // minimum 2 waypoints
 
     waypoints.clear();
     waypoints.reserve(numWaypoints);
@@ -83,7 +79,7 @@ void BezierCurve::generateWaypoints() {
         float targetLinVel = rawVelocityMag; // simple for now, could replace with interpolated value
 
         // Scale raw velocity to inches/sec based on robot limits
-        double max_linear_speed = max_rpm / 60.0 * gear_ratio * wheel_circumference; // in/s
+        double max_linear_speed = MAX_RPM / 60.0 * (2/3) * DT_WHEEL_DIAMETER * M_PI; // in/s
         targetLinVel = std::fmin(targetLinVel, max_linear_speed);
 
         // Calculate curvature and limit velocity if needed
@@ -98,6 +94,7 @@ void BezierCurve::generateWaypoints() {
 
         // Calculate theta (orientation)
         float theta = std::atan2(velocity.y, velocity.x);
+        theta = fmod(M_PI / 2 - theta, 2 * M_PI); // converts to compass angle
 
         // Protect against zero velocity when computing deltaTime
         double safeLinVel = std::max(targetLinVel, 1e-5f);
