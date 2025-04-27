@@ -18,8 +18,7 @@ void Chassis::moveDistance(float distance, int timeout, MoveDistanceParams param
     // call movePoint with the target pose
     MovePointParams newParams = {params.maxSpeed, params.minSpeed, params.earlyExitRange, forwards};
     movePoint(target.x, target.y, timeout, newParams, async);
-    // set the target pose to the current pose
-    target.x = pose.x;
+    
 }
 
 void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams params, bool async) {
@@ -27,10 +26,8 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
     this->requestMotionStart();
     if (!this->motionRunning) return;
     if (async) {
-        float dist = distance;
-        MoveDistanceParams copyParams = params;
-        pros::Task task([this, dist, timeout, copyParams]() {
-            moveDistanceRaw(dist, timeout, copyParams, false);
+        pros::Task task([&]() {
+            moveDistanceRaw(distance, timeout, params, false);
         });
         this->endMotion();
         pros::delay(10);
@@ -42,7 +39,7 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
     const float sign = copysign(1.0f, distance);
     const float initialAngle = vertical.get_position();  // in ticks or degrees
     float prevAngle = initialAngle;
-    float distTraveled = 0;
+    distTraveled = 0;
     float prevLateralOut = 0;
     Timer timer(timeout);
     bool close = false;
@@ -85,10 +82,10 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
 
     }
 
-    drivetrain.setLeftVolts(0);
-    drivetrain.setRightVolts(0);
+    // stop the drivetrain
+    drivetrain.reset();
+    // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
-
     this->endMotion();
 
 }
@@ -102,6 +99,9 @@ void Chassis::moveTime(float time, float speed) {
 
     pros::delay(time);
 
+    // stop the drivetrain
     drivetrain.reset();
+    // set distTraveled to -1 to indicate that the function has finished
+    distTraveled = -1;
     this->endMotion();
 }

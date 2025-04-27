@@ -68,8 +68,8 @@ void Drivetrain::reset() {
     rightVoltage = 0;
     leftTarget = 0;
     rightTarget = 0;
-    leftPID.reset();
-    rightPID.reset();
+    // leftPID.reset();
+    // rightPID.reset();
     // enabled = false;
 }
 

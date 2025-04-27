@@ -19,7 +19,7 @@ pros::Task* debugTask = nullptr;
 void initialize()
 {
 	if(pros::competition::is_field_control()) initSelector();
-	else selectedAuton = Auton(RED, "Test", test, Pose(48, -48, 0));
+	else selectedAuton = Auton(BLUE, "Blue Ring", blueRing, Pose(11, -52.5, 213));
 
 	initSystem();
 

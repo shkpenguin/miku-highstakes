@@ -27,19 +27,16 @@ void test() {
 }
 
 void redRush() {
-    /*
-    setPose(Pose(48, -60, 0));
-    intakeVoltage = 12000;
-    // miku.lateralPID.setGains();
-    miku.moveDistance(48, 800);
-    // doink
-    miku.movePoint(24, -24, 600, {.maxSpeed = 70});
-    */
-    
-
+    miku.boomerang(48, -12, 100, 1800);
+    miku.waitUntilDone();
 }
 
-void blueRush() {}
+void blueRush() {
+    miku.boomerang(-48, -12, 260, 1800);
+    // pros::delay(600);
+    // doinker.set_value(true);
+    miku.waitUntilDone();
+}
 
 void redRing() {
     /*
@@ -80,18 +77,19 @@ void redRing() {
 }
 
 void blueRing() {
-    /*
     // miku.boomerang(24, -24, 180, 1600, {.forwards = false, .maxSpeed = 80});
     // pros::delay(200);
-    miku.moveDistance(18, 600); // scores alliance stake
-    target = 21000;
+    lbRot.set_position(READY);
+    target = READY;
+    miku.moveDistanceRaw(6, 600); // scores alliance stake
+    target = 20000;
     miku.waitUntilDone();
-    miku.moveDistance(-34, 1000); // grabs goal
+    miku.moveDistanceRaw(-35, 1000, {.maxSpeed = 60}); // grabs goal
     pros::delay(500);
     target = 0;
     miku.waitUntilDone();
     clamp.set_value(true);
-    pros::delay(100);
+    pros::delay(300);
     miku.turnToHeading(45, 700);
     miku.waitUntilDone();
     intakeVoltage = 12000;
@@ -114,7 +112,6 @@ void blueRing() {
     miku.moveTime(1000, 60); // slowly drive forwards to pick up both rings
     miku.turnToPoint(-64, -64, 500, {.forwards = false}); // move to corner
     miku.movePoint(-64, -64, 800, {.minSpeed = 50});
-    */
 }
 
 void redSawp() {}

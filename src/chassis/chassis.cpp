@@ -29,8 +29,10 @@ void Chassis::waitUntil(float dist) {
 }
 
 void Chassis::waitUntilDone() {
-    do pros::delay(10);
-    while (distTraveled != -1);
+    while (distTraveled != -1) {
+        pros::delay(10);
+    }
+    master.rumble("------");
 }
 
 double Chassis::get_velocity(pros::MotorGroup* motors) {
