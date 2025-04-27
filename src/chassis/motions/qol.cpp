@@ -26,40 +26,34 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
     params.earlyExitRange = fabs(params.earlyExitRange);
     this->requestMotionStart();
     if (!this->motionRunning) return;
-
     if (async) {
         float dist = distance;
         MoveDistanceParams copyParams = params;
         pros::Task task([this, dist, timeout, copyParams]() {
-            moveDistance(dist, timeout, copyParams, false);
+            moveDistanceRaw(dist, timeout, copyParams, false);
         });
         this->endMotion();
         pros::delay(10);
         return;
     }
-
     lateralPID.reset();
     lateralLargeExit.reset();
     lateralSmallExit.reset();
-
     const float sign = copysign(1.0f, distance);
-    const float initialAngle = verticalTracker->get_angle();  // in ticks or degrees
+    const float initialAngle = vertical.get_position();  // in ticks or degrees
     float prevAngle = initialAngle;
     float distTraveled = 0;
     float prevLateralOut = 0;
     Timer timer(timeout);
     bool close = false;
 
-    while (!timer.isDone() &&
-           ((!lateralSmallExit.getExit() && !lateralLargeExit.getExit()) || !close) &&
-           this->motionRunning) {
-        float angleNow = verticalTracker->get_angle();
+    while (!timer.isDone() && ((!lateralSmallExit.getExit() && !lateralLargeExit.getExit()) || !close) && this->motionRunning) {
+        float angleNow = vertical.get_position();
         float deltaAngle = angleNow - prevAngle;
-        distTraveled += deg2inch(TRACKING_WHEEL_DIAMETER * M_PI, deltaAngle);  // Use appropriate conversion
+        distTraveled += deg2inch(deltaAngle / 100, TRACKING_WHEEL_DIAMETER);  // Use appropriate conversion
         prevAngle = angleNow;
-
         float remaining = distance - distTraveled;
-
+        master.set_text(0, 0, std::to_string(remaining));
         if (fabs(remaining) < 7.5 && !close) {
             close = true;
             params.maxSpeed = std::max(std::fabs(prevLateralOut), 60.0f);
@@ -67,15 +61,17 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
 
         lateralSmallExit.update(remaining);
         lateralLargeExit.update(remaining);
-
         float lateralOut = lateralPID.update(remaining);
+
         lateralOut = std::clamp(lateralOut, -params.maxSpeed, params.maxSpeed);
         if (!close) lateralOut = slew(lateralOut, prevLateralOut, lateralSettings.slew);
 
         if (sign > 0 && lateralOut < fabs(params.minSpeed) && lateralOut > 0)
             lateralOut = fabs(params.minSpeed);
+
         if (sign < 0 && lateralOut > -fabs(params.minSpeed) && lateralOut < 0)
             lateralOut = -fabs(params.minSpeed);
+
         if (!close && lateralOut * sign < 0)
             lateralOut = 0;
 
@@ -86,11 +82,26 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
 
         pros::delay(10);
         if (fabs(remaining) < params.earlyExitRange) break;
+
     }
 
     drivetrain.setLeftVolts(0);
     drivetrain.setRightVolts(0);
     distTraveled = -1;
+
     this->endMotion();
+
 }
 
+void Chassis::moveTime(float time, float speed) {
+    this->requestMotionStart();
+    if (!this->motionRunning) return;
+
+    drivetrain.setLeftVolts(speed * 120);
+    drivetrain.setRightVolts(speed * 120);
+
+    pros::delay(time);
+
+    drivetrain.reset();
+    this->endMotion();
+}

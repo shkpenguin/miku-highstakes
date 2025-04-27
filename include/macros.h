@@ -18,9 +18,6 @@ enum RingState {
 
 extern LBState currState;
 
-extern pros::Task lbTask;
-extern pros::Task userTask;
-
 void intakeControl();
 void lbControl();
 

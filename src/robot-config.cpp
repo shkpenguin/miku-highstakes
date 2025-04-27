@@ -51,9 +51,9 @@ ControllerSettings velocitySettings(
     true // trapezoidal riemann sum
 );
 
-ControllerSettings lateralSettings(2, // proportional gain (kP)
+ControllerSettings lateralSettings(6.3, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              0, // derivative gain (kD)
+                                              15, // derivative gain (kD)
                                               0, // anti windup
                                               0.5, // small error range, in inches
                                               100, // small error range timeout, in milliseconds
@@ -63,9 +63,9 @@ ControllerSettings lateralSettings(2, // proportional gain (kP)
                                               false // no trapezoidal riemann sum
 );
 
-ControllerSettings angularSettings(4, // proportional gain (kP)
-                                   0.15, // integral gain (kI)
-                                   24, // derivative gain (kD)
+ControllerSettings angularSettings(3.15, // proportional gain (kP)
+                                   0.12, // integral gain (kI)
+                                   19, // derivative gain (kD)
                                    5, // anti windup
                                    1, // small error range, in inches
                                    100, // small error range timeout, in milliseconds

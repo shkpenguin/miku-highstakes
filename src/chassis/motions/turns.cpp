@@ -6,20 +6,6 @@
 #include "utils/timer.h"
 #include "chassis/odom.h"
 
-void Chassis::moveTime(float time, float speed) {
-    this->requestMotionStart();
-    if (!this->motionRunning) return;
-
-    drivetrain.leftMotors->move(speed);
-    drivetrain.rightMotors->move(speed);
-
-    pros::delay(time);
-
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
-    this->endMotion();
-}
-
 void Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params, bool async) {
     params.minSpeed = std::abs(params.minSpeed);
     this->requestMotionStart();
@@ -86,15 +72,14 @@ void Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params
         prevMotorPower = motorPower;
 
         // move the drivetrain
-        drivetrain.leftMotors->move(motorPower);
-        drivetrain.rightMotors->move(-motorPower);
+        drivetrain.setLeftVolts(motorPower * 120);
+        drivetrain.setRightVolts(-motorPower * 120);
 
         pros::delay(10);
     }
 
     // stop the drivetrain
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();
@@ -169,15 +154,14 @@ void Chassis::turnToPoint(float x, float y, int timeout, TurnToPointParams param
         prevMotorPower = motorPower;
 
         // move the drivetrain
-        drivetrain.leftMotors->move(motorPower);
-        drivetrain.rightMotors->move(-motorPower);
+        drivetrain.setLeftVolts(motorPower * 120);
+        drivetrain.setRightVolts(-motorPower * 120);
 
         pros::delay(10);
     }
 
     // stop the drivetrain
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

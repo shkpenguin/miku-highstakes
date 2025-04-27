@@ -161,8 +161,7 @@ void Chassis::boomerang(float x, float y, float theta, int timeout, BoomerangPar
     }
 
     // stop the drivetrain
-    left_dt.move(0);
-    right_dt.move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

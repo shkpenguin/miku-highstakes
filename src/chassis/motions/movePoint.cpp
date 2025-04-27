@@ -117,16 +117,15 @@ void Chassis::movePoint(float x, float y, int timeout, MovePointParams params, b
         }
 
         // move the drivetrain
-        drivetrain.setLeftVolts(leftPower);
-        drivetrain.setRightVolts(rightPower);
+        drivetrain.setLeftVolts(leftPower * 120);
+        drivetrain.setRightVolts(rightPower * 120);
 
         // delay to save resources
         pros::delay(10);
     }
 
     // stop the drivetrain
-    drivetrain.setLeftVolts(0);
-    drivetrain.setRightVolts(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

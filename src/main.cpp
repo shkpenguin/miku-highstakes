@@ -12,6 +12,10 @@
 #include "debug.h"
 #include "system.h"
 
+pros::Task* intakeTask = nullptr;
+pros::Task* lbTask = nullptr;
+pros::Task* debugTask = nullptr;
+
 void initialize()
 {
 	if(pros::competition::is_field_control()) initSelector();
@@ -19,10 +23,9 @@ void initialize()
 
 	initSystem();
 
-	pros::Task intakeTask(intakeControl);
-	pros::Task lbTask(lbControl);
-
-	pros::Task debugTask(controllerDisplay);
+	intakeTask = new pros::Task(intakeControl);
+	lbTask = new pros::Task(lbControl);
+	// debugTask = new pros::Task(controllerDisplay);
 }
 
 void disabled()
@@ -35,9 +38,14 @@ void competition_initialize()
 
 void autonomous()
 {
+	initAuto(selectedAuton.start);
+	pros::Task autoTask(autoSystem);
 	selectedAuton.func();
 }
 
 void opcontrol()
 {
+	if(intakeTask->get_state() != pros::E_TASK_STATE_RUNNING) intakeTask = new pros::Task(intakeControl);
+	if(lbTask->get_state() != pros::E_TASK_STATE_RUNNING) lbTask = new pros::Task(lbControl);
+	pros::Task driveTask(driveControl);
 }

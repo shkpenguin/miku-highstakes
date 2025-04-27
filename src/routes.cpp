@@ -20,7 +20,9 @@ std::vector<Auton> blueAutons = {
 };
 
 void test() {
-    miku.ramsete(Point(48, -48), Point(48, -24), Point(24, -24), Point(24, -48), 4000);
+    // miku.moveTime(1000, 100);
+    miku.moveDistanceRaw(24, 1000);
+    // miku.ramsete(Point(48, -48), Point(48, -24), Point(24, -24), Point(24, -48), 4000);
     miku.waitUntilDone();
 }
 

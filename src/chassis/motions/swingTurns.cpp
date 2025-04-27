@@ -81,10 +81,10 @@ void Chassis::swingToHeading(float theta, DriveSide lockedSide, int timeout, Swi
 
         // move the drivetrain
         if (lockedSide == DriveSide::LEFT) {
-            drivetrain.rightMotors->move(-motorPower);
+            drivetrain.setRightVolts(-motorPower * 120);
             drivetrain.leftMotors->brake();
         } else {
-            drivetrain.leftMotors->move(motorPower);
+            drivetrain.setLeftVolts(motorPower * 120);
             drivetrain.rightMotors->brake();
         }
 
@@ -97,8 +97,7 @@ void Chassis::swingToHeading(float theta, DriveSide lockedSide, int timeout, Swi
     if (lockedSide == DriveSide::LEFT) drivetrain.leftMotors->set_brake_mode_all(brakeMode);
     else drivetrain.rightMotors->set_brake_mode_all(brakeMode);
     // stop the drivetrain
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();
@@ -182,10 +181,10 @@ void Chassis::swingToPoint(float x, float y, DriveSide lockedSide, int timeout, 
 
         // move the drivetrain
         if (lockedSide == DriveSide::LEFT) {
-            drivetrain.rightMotors->move(-motorPower);
+            drivetrain.setRightVolts(-motorPower * 120);
             drivetrain.leftMotors->brake();
         } else {
-            drivetrain.leftMotors->move(motorPower);
+            drivetrain.setLeftVolts(motorPower * 120);
             drivetrain.rightMotors->brake();
         }
 
@@ -197,8 +196,7 @@ void Chassis::swingToPoint(float x, float y, DriveSide lockedSide, int timeout, 
     if (lockedSide == DriveSide::LEFT) drivetrain.leftMotors->set_brake_mode_all(brakeMode);
     else drivetrain.rightMotors->set_brake_mode_all(brakeMode);
     // stop the drivetrain
-    drivetrain.leftMotors->move(0);
-    drivetrain.rightMotors->move(0);
+    drivetrain.reset();
     // set distTraveled to -1 to indicate that the function has finished
     distTraveled = -1;
     this->endMotion();

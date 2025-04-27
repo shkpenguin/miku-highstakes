@@ -5,7 +5,7 @@
 #include "robot-config.h"
 #include "chassis/drivetrain.h"
 
-double kV = 1.0;
+double kV = 0.5;
 double kW = 1.0;
 double zeta = 0.7;
 double b = 2.0;
@@ -51,7 +51,7 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
             }
         }
 
-        currentWaypoint = closest;
+        currentWaypoint = closest + 1;
 
         Waypoint wp = p.waypoints[currentWaypoint];
 
@@ -87,9 +87,12 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double leftVel = v - w * (TRACK_WIDTH / 2.0);
         double rightVel = v + w * (TRACK_WIDTH / 2.0);
 
+        // print to controller
+        pros::lcd::set_text(0, _2f(xt) + " " + _2f(wp.y) + " " + _2f(wp.theta));
+
         if(first) {
-            drivetrain.setLeftTarget(vel2rpm(leftVel));
-            drivetrain.setRightTarget(vel2rpm(rightVel));
+            drivetrain.setLeftVolts(voltageLookup(vel2rpm(leftVel)));
+            drivetrain.setRightVolts(voltageLookup(vel2rpm(rightVel)));
             first = false;
         } else {
             drivetrain.setLeftTarget(vel2rpm(leftVel));
