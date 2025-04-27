@@ -27,6 +27,8 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
     int currentWaypoint = 0;
     int waypointCount = p.waypoints.size();
 
+    bool first = true;
+
     enableCorrection();
 
     while(!timer.isDone() && this->motionRunning && (!lateralLargeExit.getExit() && !lateralSmallExit.getExit())) {
@@ -85,8 +87,14 @@ void Chassis::ramsete(Point p0, Point p1, Point p2, Point p3, int timeout) {
         double leftVel = v - w * (TRACK_WIDTH / 2.0);
         double rightVel = v + w * (TRACK_WIDTH / 2.0);
 
-        drivetrain.setLeftTarget(vel2rpm(leftVel));
-        drivetrain.setRightTarget(vel2rpm(rightVel));
+        if(first) {
+            drivetrain.setLeftTarget(vel2rpm(leftVel));
+            drivetrain.setRightTarget(vel2rpm(rightVel));
+            first = false;
+        } else {
+            drivetrain.setLeftTarget(vel2rpm(leftVel));
+            drivetrain.setRightTarget(vel2rpm(rightVel));
+        }
 
         pros::delay(10);
     }
