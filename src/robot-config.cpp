@@ -23,7 +23,7 @@ pros::Optical optical(13);
 pros::Distance leftDist(11);
 pros::Distance rightDist(15);
 
-pros::Rotation hori(-18);
+pros::Rotation hori(18);
 pros::Rotation vertical(17);
 
 std::vector<Gains> velocityGains = {
