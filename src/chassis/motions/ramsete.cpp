@@ -6,7 +6,7 @@
 #include "chassis/drivetrain.h"
 
 double kV = 0.5;
-double kW = 1.0;
+double kW = 0.5;
 double zeta = 0.7;
 double b = 2.0;
 double dt = 10; // ms

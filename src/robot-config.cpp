@@ -26,6 +26,7 @@ pros::Distance rightDist(15);
 pros::Rotation hori(18);
 pros::Rotation vertical(17);
 
+/*
 std::vector<Gains> velocityGains = {
     Gains(4, 0.15, 24), // no goal
     Gains(4, 0.15, 24), // empty goal
@@ -37,6 +38,7 @@ std::vector<Gains> velocityGains = {
     Gains(4, 0.15, 24), // 6 rings
     Gains(4, 0.15, 24) // full goal
 };
+*/
 
 ControllerSettings velocitySettings(
     100, // proportional gain (kP)

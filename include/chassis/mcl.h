@@ -37,7 +37,11 @@ void resampleParticles();
 void motionUpdate(Point delta);
 bool sensorUpdate(const std::vector<float>& actual);
 Point getEstimate();
-void injectAroundEstimate(float essThresholdRatio = 0.5f,
-                          float transSigma = 1.0f);
+void injectAroundEstimate(float essThresholdRatio = 0.5f, float transSigma = 1.0f);
+
+void enableLeft();
+void enableRight();
+void disableLeft();
+void disableRight();
 
 void updateMCL();

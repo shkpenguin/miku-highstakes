@@ -5,6 +5,14 @@
 #include <vector>
 #include <numeric>
 
+bool leftEnabled = true;
+bool rightEnabled = true;
+
+void enableLeft() {leftEnabled = true;}
+void enableRight() {rightEnabled = true;}
+void disableLeft() {leftEnabled = false;}
+void disableRight() {rightEnabled = false;}
+
 std::vector<Particle> particles;
 
 void motionUpdate(Point delta) {
@@ -172,8 +180,8 @@ std::vector<float> estimateDistance(const Point& point) {
 
   // 6) clamp to valid range
   std::vector<float> dist = {-1.0f, -1.0f};
-  if (dL <= HALF) dist[0] = dL;
-  if (dR <= HALF) dist[1] = dR;
+  if (dL <= HALF && leftEnabled) dist[0] = dL;
+  if (dR <= HALF && rightEnabled) dist[1] = dR;
   return dist;
 }
 

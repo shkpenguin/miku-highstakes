@@ -117,3 +117,5 @@ void blueRing() {
 void redSawp() {}
 
 void blueSawp() {}
+
+void skills() {}
