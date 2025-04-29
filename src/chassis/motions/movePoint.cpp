@@ -73,11 +73,11 @@ void Chassis::movePoint(float x, float y, int timeout, MovePointParams params, b
         // calculate error
         const float adjustedRobotTheta = params.forwards ? pose.theta : pose.theta + M_PI;
         const float angularError = angleError(adjustedRobotTheta, pose.angle(target));
-        float lateralError = pose.distance(target) * cos(angleError(pose.theta, pose.angle(target)));
+        float lateralError = pose.distance(target) * cos(angleError(adjustedRobotTheta, pose.angle(target)));
 
         // update exit conditions
-        lateralSmallExit.update(lateralError);
-        lateralLargeExit.update(lateralError);
+        lateralSmallExit.update(fabs(lateralError));
+        lateralLargeExit.update(fabs(lateralError));
 
         // get output from PIDs
         float lateralOut = lateralPID.update(lateralError);
@@ -95,8 +95,8 @@ void Chassis::movePoint(float x, float y, int timeout, MovePointParams params, b
         if (!close) lateralOut = slew(lateralOut, prevLateralOut, lateralSettings.slew);
 
         // prevent moving in the wrong direction
-        if (params.forwards && !close) lateralOut = std::fmax(lateralOut, 0);
-        else if (!params.forwards && !close) lateralOut = std::fmin(lateralOut, 0);
+        if (params.forwards && lateralOut < 0 && !close) lateralOut = 0;
+        else if (!params.forwards && lateralOut > 0 && !close) lateralOut = 0;
 
         // constrain lateral output by the minimum speed
         if (params.forwards && lateralOut < fabs(params.minSpeed) && lateralOut > 0) lateralOut = fabs(params.minSpeed);

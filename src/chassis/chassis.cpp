@@ -32,7 +32,6 @@ void Chassis::waitUntilDone() {
     while (distTraveled != -1) {
         pros::delay(10);
     }
-    master.rumble("------");
 }
 
 double Chassis::get_velocity(pros::MotorGroup* motors) {

@@ -22,7 +22,7 @@ void initAuto(Pose pose) {
 
 void autoSystem() {
     while(true) {
-        if(!pros::competition::is_autonomous()) break;
+        // if(!pros::competition::is_autonomous()) break;
         // Update raw odometry calculations
         updateOdom();
         

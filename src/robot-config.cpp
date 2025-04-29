@@ -65,8 +65,8 @@ ControllerSettings lateralSettings(6.3, // proportional gain (kP)
                                               false // no trapezoidal riemann sum
 );
 
-ControllerSettings angularSettings(3.15, // proportional gain (kP)
-                                   0.12, // integral gain (kI)
+ControllerSettings angularSettings(3, // proportional gain (kP)
+                                   0.11 , // integral gain (kI)
                                    19, // derivative gain (kD)
                                    5, // anti windup
                                    1, // small error range, in inches

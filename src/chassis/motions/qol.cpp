@@ -50,7 +50,6 @@ void Chassis::moveDistanceRaw(float distance, int timeout, MoveDistanceParams pa
         distTraveled += deg2inch(deltaAngle / 100, TRACKING_WHEEL_DIAMETER);  // Use appropriate conversion
         prevAngle = angleNow;
         float remaining = distance - distTraveled;
-        master.set_text(0, 0, std::to_string(remaining));
         if (fabs(remaining) < 7.5 && !close) {
             close = true;
             params.maxSpeed = std::max(std::fabs(prevLateralOut), 60.0f);
